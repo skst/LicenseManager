@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>LicenseManager_12noon</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <Platforms>x64</Platforms>
+    <PackageIcon />
+    <ApplicationIcon>lock.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="lock.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="lock.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Standard.Licensing" Version="1.1.7" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Resource Include="lock.png" />
+  </ItemGroup>
+
+</Project>
