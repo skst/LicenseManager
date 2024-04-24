@@ -1,0 +1,208 @@
+name: .NET
+
+#
+# Skip the workflow with one of the following:
+#   [skip ci]
+#   [ci skip]
+#   ***NO_CI***
+#
+# Note that a commit MUST include one of the following to create a release:
+#   #patch
+#   #minor
+#   #major
+#
+
+on:
+  workflow_dispatch:
+    branches: [ master, yaml ]
+  push:
+    branches: [ master, yaml ]
+    paths-ignore:
+      - '**/*.gitignore'
+      - '**/*.gitattributes'
+      - '**/*.md'
+      - 'LICENSE'
+  pull_request:
+    branches: [ master, yaml ]
+    paths-ignore:
+      - '**/*.gitignore'
+      - '**/*.gitattributes'
+      - '**/*.md'
+      - 'LICENSE'
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: 12noon.LicenseManager/LicenseManager_12noon.csproj
+  SOLUTION_TESTS_FILE_PATH: 12noon.LicenseManager.UnitTests/LicenseManager_12noon.UnitTests.csproj
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+  ARTIFACT_NAME: 12noon.LicenseManager
+  ARTIFACT_PACKAGE: package-12noon.licensemanager
+
+concurrency:
+  group: licensemanager-${{ github.ref }}-1
+  cancel-in-progress: true
+
+# Jobs are run in parallel unless `needs` is specified.
+# https://docs.github.com/en/actions/learn-github-actions/managing-complex-workflows#creating-dependent-jobs
+jobs:
+  build:
+    if: (github.event_name == 'workflow_dispatch') || (!contains(toJson(github.event.commits.*.message), '***NO_CI***') && !contains(toJson(github.event.commits.*.message), '[ci skip]') && !contains(toJson(github.event.commits.*.message), '[skip ci]'))
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Work around https://github.com/actions/setup-dotnet/issues/155
+      - name: Clean solution
+        run: dotnet clean --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+      - name: Clean NuGet
+        run: dotnet nuget locals all --clear
+
+      # https://docs.microsoft.com/en-us/dotnet/core/tools/
+      - name: Build
+        run: dotnet build ${{env.SOLUTION_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+
+      - name: Test
+        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity minimal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
+
+      - name: Build single-file deployment
+        # Publish to sibling `release` folder for github-tag-action step.
+        run: dotnet publish ${{env.SOLUTION_FILE_PATH}} -p:PublishProfile=FolderProfile -o ./release/
+
+      - name: Copy Files to Publish
+        run: Copy-Item -Path LICENSE -Destination ./release/
+
+      # Upload release artifact to share with next job
+      # https://docs.github.com/en/actions/guides/storing-workflow-data-as-artifacts#about-workflow-artifacts
+      # https://github.com/marketplace/actions/upload-a-build-artifact
+      - name: Upload deployment folder as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.ARTIFACT_PACKAGE}}
+          path: ./release/
+          retention-days: 1
+        # Use always() to always run this step even when there are failures
+        #if: ${{ always() }}
+
+
+  version:
+    needs: build
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+    outputs:
+#      TagNoV: ${{ steps.StepTagNoV.outputs.new_tag }}
+      TagNoV: ${{ steps.TrimV.outputs.result }}
+      TagPart: ${{ steps.StepTagNoV.outputs.part }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      # https://github.com/marketplace/actions/github-tag-bump
+      # We want to use the tag without the 'v' prefix for the release name.
+      # The action does not output that, so we perform a dry run to get the tag without 'v'.
+      - name: Get tag without 'v' prefix
+        id: StepTagNoV
+        uses: anothrNick/github-tag-action@1.67.0
+        env:
+          DRY_RUN: true
+          DEFAULT_BUMP: none
+          WITH_V: false
+
+      - name: Output bump part
+        run: echo Bump part=${{ steps.StepTagNoV.outputs.part }}
+
+      # BUG: `new_tag` has the 'v' even when WITH_V is false.
+      # So, we remove it.
+      - name: Substitute string
+        uses: bluwy/substitute-string-action@v3.0.0
+        id: TrimV
+        with:
+          _input-text: ${{ steps.StepTagNoV.outputs.new_tag }}
+          # This emits a warning which can be ignored.
+          v: ''
+
+      - name: Output trimmed version
+        run: echo Version=${{ steps.TrimV.outputs.result }}
+        # steps.TrimV.outputs.result replaces steps.StepTagNoV.outputs.new_tag
+
+
+  publish:
+    needs: version
+    if: needs.version.outputs.TagPart != 'none'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      # Download publish artifact from previous job
+      # https://github.com/marketplace/actions/download-a-build-artifact
+      - name: Download deployment folder as a build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{env.ARTIFACT_PACKAGE}}
+          path: ./release/
+
+      # Delete publish artifact so it does not count against storage
+      # https://github.com/marketplace/actions/delete-artifact
+      - name: Delete build artifact
+        uses: GeekyEggo/delete-artifact@v5
+        with:
+          name: ${{env.ARTIFACT_PACKAGE}}
+          failOnError: false
+
+      - name: List folder
+        run: |
+          ls -la
+          ls -la ./release/
+
+      # https://github.com/marketplace/actions/github-tag-bump
+      - name: Bump version and push tag
+        id: StepBump
+        uses: anothrNick/github-tag-action@1.67.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: none
+          WITH_V: true
+
+      - name: Zip Release folder
+        if: success()
+        working-directory: ./release
+        run: |
+          zip ../${{env.ARTIFACT_NAME}}.zip *
+          cd ..
+          ls -la
+          zipinfo ${{env.ARTIFACT_NAME}}.zip
+
+      # (This could be a separate action triggered by pushing a tag.)
+      # https://github.com/marketplace/actions/create-release
+      - name: Create release with artifact
+        if: success() && needs.version.outputs.TagNoV && steps.StepBump.outputs.new_tag
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          name: ${{ needs.version.outputs.TagNoV }}
+          tag: ${{ steps.StepBump.outputs.new_tag }}
+          #body: ???
+          # Note: Using "./release/*" uploads the individual files.
+          artifacts: ${{env.ARTIFACT_NAME}}.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
