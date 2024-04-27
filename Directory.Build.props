@@ -8,8 +8,15 @@
 		<Company>12noon</Company>
 		<Copyright>(c) 2024 12noon, Stefan K.S. Tucker</Copyright>
 		<Product>License Manager</Product>
-		<VersionPrefix>1.0.0</VersionPrefix>
-		<FileVersion>1.0.0.0</FileVersion>
-		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<VersionPrefix>1.1.0</VersionPrefix>
+		<FileVersion>1.1.0.0</FileVersion>
+		<AssemblyVersion>1.1.0</AssemblyVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+
+		<!-- No need to use $(MSBuildProjectName) because VS creates subfolders in obj\ and bin\ -->
+		<ArtifactsPath>C:\VSIntermediate\$(SolutionName)\artifacts</ArtifactsPath>
+
 	</PropertyGroup>
 </Project>
