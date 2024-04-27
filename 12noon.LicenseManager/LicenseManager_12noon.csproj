@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="Standard.Licensing" Version="1.1.7" />
+    <PackageReference Include="Standard.Licensing" Version="1.1.8" />
   </ItemGroup>
 
 
