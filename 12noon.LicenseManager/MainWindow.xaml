@@ -122,14 +122,18 @@
 				</Grid.RowDefinitions>
 
 				<Label Grid.Row="0" Grid.Column="0" Content="Passphrase:" />
-				<TextBox	Grid.Row="0" Grid.Column="1" Text="{Binding Passphrase, UpdateSourceTrigger=PropertyChanged}" />
+				<TextBox	Grid.Row="0" Grid.Column="1" Text="{Binding Passphrase, UpdateSourceTrigger=PropertyChanged}" d:Text="Lorem Ipsum Dolor Set" />
 				<Button Grid.Row="0" Grid.Column="2" Style="{StaticResource StyleButton}"
 					IsEnabled="{Binding Passphrase, Converter={StaticResource ValueToBooleanConverter}}"
 					Content="Create Keypair" Click="CreateKeypairButton_Click"
 				/>
 
 				<Label		Grid.Row="1" Grid.Column="0" Content="Public key:" />
-				<TextBlock	Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding KeyPublic}" d:Text="57C33886-8527-4598-B7B8-BC62ECB9DBA6" />
+				<TextBlock	Grid.Row="1" Grid.Column="1" Text="{Binding KeyPublic}" d:Text="57C33886-8527-4598-B7B8-BC62ECB9DBA6" />
+				<Button		Grid.Row="1" Grid.Column="2" Style="{StaticResource StyleButton}"
+					IsEnabled="{Binding KeyPublic, Converter={StaticResource ValueToBooleanConverter}}"
+					Content="Copy" Click="CopyPublicKeyButton_Click"
+				/>
 
 				<Label	Grid.Row="2" Grid.Column="0" Content="ID:" />
 				<TextBox	Grid.Row="2" Grid.Column="1" Text="{Binding Id}" />

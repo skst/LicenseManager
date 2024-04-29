@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Win32;
-using Standard.Licensing;
 using System;
 using System.Windows;
 
@@ -50,6 +49,18 @@ public partial class MainWindow : Window
 		TheLicenseManager.CreateKeypair();
 
 		SetValidationDisplay(isValid: null);
+	}
+
+	private void CopyPublicKeyButton_Click(object sender, RoutedEventArgs e)
+	{
+		try
+		{
+			Clipboard.SetText(TheLicenseManager.KeyPublic);
+		}
+		catch (System.Runtime.InteropServices.ExternalException)
+		{
+			// Another app has the clipboard open
+		}
 	}
 
 	private void NewIdButton_Click(object sender, RoutedEventArgs e)
