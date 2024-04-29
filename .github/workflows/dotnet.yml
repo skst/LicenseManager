@@ -79,7 +79,7 @@ jobs:
 
       - name: Build single-file deployment
         # Publish to sibling `release` folder for github-tag-action step.
-        run: dotnet publish ${{env.SOLUTION_FILE_PATH}} -p:PublishProfile=FolderProfile -o ./release/
+        run: dotnet publish ${{env.SOLUTION_FILE_PATH}} --property:PublishProfile=FolderProfile --output ./release/
 
       - name: Copy Files to Publish
         run: Copy-Item -Path LICENSE -Destination ./release/
@@ -134,7 +134,11 @@ jobs:
         with:
           _input-text: ${{ steps.StepTagNoV.outputs.new_tag }}
           # This emits a warning which can be ignored.
-          v: ''
+          # v: ''
+        # https://github.com/orgs/community/discussions/25387
+        # Can work around warning by using this environment variables:
+        env:
+          INPUT_v: ''
 
       - name: Output trimmed version
         run: echo Version=${{ steps.TrimV.outputs.result }}

@@ -6,7 +6,7 @@
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/skst/LicenseManager)](https://github.com/skst/LicenseManager)
 
-This is a graphical front-end for the Standard.Licensing project.
+This is a graphical front-end for the [Standard.Licensing](https://github.com/junian/Standard.Licensing) project.
 
 ![License Manager](https://github.com/skst/LicenseManager/blob/master/12noon.LicenseManager.png)
 
