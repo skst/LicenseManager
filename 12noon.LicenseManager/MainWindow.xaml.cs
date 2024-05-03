@@ -135,7 +135,14 @@ public partial class MainWindow : Window
 
 		PathLicense = sfd.FileName;
 
-		TheLicenseManager.CreateLicenseFile(PathLicense);
+		try
+		{
+			TheLicenseManager.CreateLicenseFile(PathLicense);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show($"Unable to create license: {ex}", Title);
+		}
 
 		SetValidationDisplay(isValid: null);
 	}
