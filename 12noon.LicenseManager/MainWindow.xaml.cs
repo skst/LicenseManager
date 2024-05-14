@@ -72,6 +72,8 @@ public partial class MainWindow : Window
 
 	private void SelectAssemblyButton_Click(object sender, RoutedEventArgs e)
 	{
+		string currentPath = TheLicenseManager.PathAssembly;
+
 		TheLicenseManager.PathAssembly = string.Empty;
 
 		OpenFileDialog ofd = new()
@@ -83,7 +85,7 @@ public partial class MainWindow : Window
 			Multiselect = false,
 			Filter = "Assembly Files|*.exe;*.dll",
 			DefaultExt = @".exe",
-			FileName = TheLicenseManager.PathAssembly,
+			FileName = currentPath,
 		};
 
 		if (!ofd.ShowDialog().GetValueOrDefault())
