@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Standard.Licensing;
+using System.Diagnostics;
 
 namespace LicenseKeys.UnitTests;
 
@@ -300,5 +301,69 @@ public class CreateLicenseTest
 		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssemblyFileBad);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
 
+	}
+
+	[TestMethod]
+	public void TestCreateLicenseAndValidateCulture()
+	{
+		Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("es-ES");
+		Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("es-ES");
+
+		Shared.LicenseManager manager = new();
+
+		/// Create keypair
+		manager.Passphrase = "This is another random passphrase dolor lorem.";
+		manager.CreateKeypair();
+
+		// Default value
+		Assert.AreEqual(LicenseType.Standard, manager.StandardOrTrial);
+
+		const LicenseType LICENSE_TYPE = LicenseType.Trial;
+		const string PRODUCT_ID = "Elephant Product ID";
+		const string PRODUCT_NAME = "My Product";
+		const string VERSION = "1.24.836";
+		// Local time
+		DateOnly DatePublished = new(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, DateTimeOffset.Now.Day);
+		const int PRODUCT_QUANTITY = 15;
+		const string LICENSEE_NAME = "John Doe";
+		const string LICENSEE_EMAIL = "john.doe@outlook.com";
+		const string LICENSEE_COMPANY = "Acme Corp.";
+
+		/// Create license
+		manager.StandardOrTrial = LICENSE_TYPE;
+		manager.ProductId = PRODUCT_ID;
+		manager.Product = PRODUCT_NAME;
+		manager.Version = VERSION;
+		manager.PublishDate = DatePublished;
+		manager.ExpirationDays = 10;
+		manager.Quantity = PRODUCT_QUANTITY;
+		manager.Name = LICENSEE_NAME;
+		manager.Email = LICENSEE_EMAIL;
+		manager.Company = LICENSEE_COMPANY;
+
+		manager.CreateLicenseFile(PathLicenseFile);
+		Assert.IsTrue(File.Exists(PathLicenseFile));
+
+		Assert.AreEqual(LICENSE_TYPE, manager.StandardOrTrial);
+
+		string publicKey = manager.KeyPublic;
+
+		/// Validate license
+		manager = new();
+
+		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		Debug.WriteLineIf(!string.IsNullOrEmpty(errorMessages), errorMessages);
+		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+
+		Assert.AreEqual(LICENSE_TYPE, manager.StandardOrTrial);
+		Assert.AreEqual(PRODUCT_ID, manager.ProductId);
+		Assert.AreEqual(PRODUCT_NAME, manager.Product);
+		Assert.AreEqual(VERSION, manager.Version);
+		Assert.AreEqual(DatePublished, manager.PublishDate);
+		Assert.AreEqual(10, manager.ExpirationDays);
+		Assert.AreEqual(PRODUCT_QUANTITY, manager.Quantity);
+		Assert.AreEqual(LICENSEE_NAME, manager.Name);
+		Assert.AreEqual(LICENSEE_EMAIL, manager.Email);
+		Assert.AreEqual(LICENSEE_COMPANY, manager.Company);
 	}
 }

@@ -411,7 +411,7 @@ public partial class LicenseManager : ObservableObject
 				string s = license.ProductFeatures.Get(ProductFeature_Name_PublishDate);
 				if (!string.IsNullOrEmpty(s))
 				{
-					PublishDate = DateOnly.Parse(s);
+					PublishDate = DateOnly.Parse(s, CultureInfo.InvariantCulture);
 				}
 
 				StandardOrTrial = license.Type;
