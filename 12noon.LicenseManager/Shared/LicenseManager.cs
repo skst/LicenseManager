@@ -334,7 +334,7 @@ public partial class LicenseManager : ObservableObject
 		PublishDate = null;
 
 		ExpirationDays = 0;
-		Quantity = 0;
+		Quantity = 1;
 
 		Name = string.Empty;
 		Email = string.Empty;
