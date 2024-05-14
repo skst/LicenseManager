@@ -8,9 +8,9 @@
 		<Company>12noon</Company>
 		<Copyright>(c) 2024 12noon, Stefan K.S. Tucker</Copyright>
 		<Product>License Manager</Product>
-		<VersionPrefix>1.1.3</VersionPrefix>
-		<FileVersion>1.1.3.0</FileVersion>
-		<AssemblyVersion>1.1.3</AssemblyVersion>
+		<VersionPrefix>1.1.4</VersionPrefix>
+		<FileVersion>1.1.4.0</FileVersion>
+		<AssemblyVersion>1.1.4</AssemblyVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
