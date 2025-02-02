@@ -5,12 +5,12 @@
 	https://stackoverflow.com/questions/45575280/msbuild-nuget-restoreoutputpath-how-to-make-it-work
 -->
 	<PropertyGroup>
-		<Company>12noon</Company>
+		<Company>12noon LLC</Company>
 		<Copyright>(c) 2024-2025 12noon LLC</Copyright>
 		<Product>License Manager</Product>
-		<VersionPrefix>1.1.5</VersionPrefix>
-		<FileVersion>1.1.5.0</FileVersion>
-		<AssemblyVersion>1.1.5</AssemblyVersion>
+		<VersionPrefix>1.2.2</VersionPrefix>
+		<FileVersion>1.2.2.0</FileVersion>
+		<AssemblyVersion>1.2.2</AssemblyVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
