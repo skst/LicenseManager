@@ -24,7 +24,7 @@ namespace Shared;
 /// manager.CreateKeypair();
 /// manager.Product = "My Product";
 /// manager.Version = "5.8.02 Beta";
-/// manager.CreateLicenseFile("C:\Path\To\TheLicense.lic");
+/// manager.SaveLicenseFile("C:\Path\To\TheLicense.lic");
 /// string publicKey = TheLicenseManager.KeyPublic;
 /// </example>
 /// <example>
@@ -42,6 +42,7 @@ namespace Shared;
 public partial class LicenseManager : ObservableObject
 {
 	public const string FileExtension_License = ".lic";
+	public const string FileExtension_PrivateKey = ".private";
 
 	private const string MESSAGE_LICENSE_MISSING1 = "Unable to find license file {0}.";
 	private const string MESSAGE_LICENSE_INVALID_PRODUCT_IDENTITY1 = "License file {0} is not associated with this product.";
@@ -49,13 +50,34 @@ public partial class LicenseManager : ObservableObject
 	private const string MESSAGE_LICENSE_INVALID = "License validation failure.";
 	private const string MESSAGE_LICENSE_RESOLVE = "Please contact your company's IT department or Support at 12noon.com.";
 
-	private const string FileExtension_PrivateKey = ".private";
 	private const string ELEMENT_NAME_ROOT = "private";
+	private const string ATTRIBUTE_NAME_VERSION = "version";
+
+	private const string ELEMENT_NAME_ID = "id";
+
+	private const string ELEMENT_NAME_SECRET = "secret";
 	private const string ELEMENT_NAME_PASSPHRASE = "passphrase";
 	private const string ELEMENT_NAME_PRIVATEKEY = "private-key";
+
+	private const string ELEMENT_NAME_APP = "application";
 	private const string ELEMENT_NAME_PUBLICKEY = "public-key";
-	private const string ELEMENT_NAME_ID = "id";
-	private const string ELEMENT_NAME_PRODUCTID = "product-id";
+	private const string ELEMENT_NAME_PRODUCT_ID = "product-id";
+
+	private const string ELEMENT_NAME_CUSTOMER = "customer";
+	private const string ELEMENT_NAME_NAME = "name";
+	private const string ELEMENT_NAME_EMAIL = "email";
+	private const string ELEMENT_NAME_COMPANY = "company";
+
+	private const string ELEMENT_NAME_PRODUCT = "product";
+	private const string ELEMENT_NAME_PRODUCT_NAME = "product-name";
+	private const string ELEMENT_NAME_VERSION = "version";
+	private const string ELEMENT_NAME_PUBLISH_DATE = "publish-date-utc";
+
+	private const string ELEMENT_NAME_LICENSE = "license";
+	private const string ELEMENT_NAME_STANDARD_OR_TRIAL = "standard-or-trial";
+	private const string ELEMENT_NAME_EXPIRATION_DAYS = "expiration-days";
+	private const string ELEMENT_NAME_QUANTITY = "quantity";
+
 	private const string ELEMENT_NAME_PATHASSEMBLY = "path-assembly";
 
 	private const string ProductFeature_Name_Product = "Product";
@@ -115,6 +137,32 @@ public partial class LicenseManager : ObservableObject
 	private static string CreateProductIdentity(string productId, string keyPublic) => productId + " " + keyPublic;
 
 
+	/// <summary>
+	/// Indicates if any of the properties have changed.
+	/// (If so, the keypair file must be saved.)
+	/// </summary>
+	//public bool IsDirty => _isDirty;
+	public void ClearDirtyFlag() => IsDirty = false;
+	[ObservableProperty]
+	private bool _isDirty = false;
+	/// <summary>
+	/// We need to know if changes have been made to any of the properties.
+	/// If so, we require the user to save the keypair file
+	/// (before saving or validating the license).
+	/// </summary>
+	/// <param name="e"></param>
+	protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+	{
+		base.OnPropertyChanged(e);
+
+		// Changing the IsDirty property does not make the object dirty.
+		if (e.PropertyName != nameof(IsDirty))
+		{
+			IsDirty = true;
+		}
+	}
+
+
 	/*
 	 * We handle two use cases:
 	 *
@@ -145,21 +193,109 @@ public partial class LicenseManager : ObservableObject
 	/// </summary>
 	/// <remarks></remarks>
 	/// <exception cref="FileNotFoundException">
-	/// The .private file does not exist.
+	/// The keypair file does not exist.
 	/// </exception>
-	/// <param name="pathLicense"></param>
-	public void LoadKeypair(string pathLicense)
+	/// <param name="pathKeypair"></param>
+	public void LoadKeypair(string pathKeypair)
 	{
-		string pathPrivate = Path.ChangeExtension(pathLicense, FileExtension_PrivateKey);
-		XDocument xmlDoc = XDocument.Load(pathPrivate);
+		ConvertOldPrivateAndLicenseFiles(pathKeypair);
 
-		Passphrase = xmlDoc.Element(ELEMENT_NAME_ROOT)!.Element(ELEMENT_NAME_PASSPHRASE)!.Value;
-		KeyPrivate = xmlDoc.Element(ELEMENT_NAME_ROOT)!.Element(ELEMENT_NAME_PRIVATEKEY)!.Value;
-		KeyPublic = xmlDoc.Element(ELEMENT_NAME_ROOT)!.Element(ELEMENT_NAME_PUBLICKEY)!.Value;
-		Id = (Guid)xmlDoc.Element(ELEMENT_NAME_ROOT)!.Element(ELEMENT_NAME_ID)!;
-		ProductId = xmlDoc.Element(ELEMENT_NAME_ROOT)!.Element(ELEMENT_NAME_PRODUCTID)!.Value;
-		PathAssembly = xmlDoc.Element(ELEMENT_NAME_ROOT)!.Element(ELEMENT_NAME_PATHASSEMBLY)!.Value;
+		XDocument xmlDoc = XDocument.Load(pathKeypair);
+
+		XElement root = xmlDoc.Element(ELEMENT_NAME_ROOT)!;
+
+		XElement secret = root.Element(ELEMENT_NAME_SECRET)!;
+		Passphrase = secret.Element(ELEMENT_NAME_PASSPHRASE)!.Value;
+		KeyPrivate = secret.Element(ELEMENT_NAME_PRIVATEKEY)!.Value;
+
+		Id = (Guid)root.Element(ELEMENT_NAME_ID)!;
+
+		XElement app = root.Element(ELEMENT_NAME_APP)!;
+		KeyPublic = app.Element(ELEMENT_NAME_PUBLICKEY)!.Value;
+		ProductId = app.Element(ELEMENT_NAME_PRODUCT_ID)!.Value;
+
+		XElement customer = root.Element(ELEMENT_NAME_CUSTOMER)!;
+		Name = customer.Element(ELEMENT_NAME_NAME)!.Value;
+		Email = customer.Element(ELEMENT_NAME_EMAIL)!.Value;
+		Company = customer.Element(ELEMENT_NAME_COMPANY)!.Value;
+
+		XElement product = root.Element(ELEMENT_NAME_PRODUCT)!;
+		Product = product.Element(ELEMENT_NAME_PRODUCT_NAME)!.Value;
+		Version = product.Element(ELEMENT_NAME_VERSION)!.Value;
+		string publishDate = product.Element(ELEMENT_NAME_PUBLISH_DATE)!.Value;
+		PublishDate = string.IsNullOrEmpty(publishDate) ? null : DateOnly.Parse(publishDate, CultureInfo.InvariantCulture);
+
+		XElement license = root.Element(ELEMENT_NAME_LICENSE)!;
+		StandardOrTrial = Enum.Parse<LicenseType>(license.Element(ELEMENT_NAME_STANDARD_OR_TRIAL)!.Value);
+		ExpirationDays = int.Parse(license.Element(ELEMENT_NAME_EXPIRATION_DAYS)!.Value);
+		Quantity = int.Parse(license.Element(ELEMENT_NAME_QUANTITY)!.Value);
+		PathAssembly = root.Element(ELEMENT_NAME_PATHASSEMBLY)!.Value;
 		IsLockedToAssembly = !string.IsNullOrEmpty(PathAssembly);
+
+		ClearDirtyFlag();
+	}
+
+	/// <summary>
+	/// Convert old private and license files to the new format.
+	/// </summary>
+	/// <remarks>
+	/// Feb 2025: Delete when no longer needed.
+	/// </remarks>
+	/// <param name="pathKeypair"></param>
+	private void ConvertOldPrivateAndLicenseFiles(string pathKeypair)
+	{
+		XDocument xmlDocKeypair = XDocument.Load(pathKeypair);
+		XElement root = xmlDocKeypair.Element(ELEMENT_NAME_ROOT)!;
+		XAttribute? versionAttribute = root.Attribute(ATTRIBUTE_NAME_VERSION);
+		if (versionAttribute is not null)
+		{
+			return;
+		}
+
+		try
+		{
+			// Load properties from old private key file.
+			Passphrase = root.Element("passphrase")!.Value;
+			KeyPrivate = root.Element("private-key")!.Value;
+			KeyPublic = root.Element("public-key")!.Value;
+			Id = (Guid)root.Element("id")!;
+			ProductId = root.Element("product-id")!.Value;
+			PathAssembly = root.Element("path-assembly")!.Value;
+			IsLockedToAssembly = !string.IsNullOrEmpty(PathAssembly);
+
+			// Load other properties from license file.
+			string pathLicense = Path.ChangeExtension(pathKeypair, ".lic");
+			XDocument xmlDocLicense = XDocument.Load(pathLicense);
+			root = xmlDocLicense.Element("License")!;
+
+			StandardOrTrial = Enum.Parse<LicenseType>(root.Element("Type")!.Value);
+
+			Product = GetNestedValue(root, "Feature", "Product");
+			Version = GetNestedValue(root, "Feature", "Version");
+			string publishDate = GetNestedValue(root, "Feature", "Publish Date");
+			PublishDate = string.IsNullOrEmpty(publishDate) ? null : DateOnly.Parse(publishDate, CultureInfo.InvariantCulture);
+
+			XElement customer = root.Element("Customer")!;
+			Name = customer.Element("Name")!.Value;
+			Email = customer.Element("Email")!.Value;
+			Company = customer.Element("Company")?.Value ?? string.Empty;
+
+			ExpirationDays = Convert.ToInt32(GetNestedValue(root, "Attribute", "Expiration Days"));
+
+			SaveKeypair(pathKeypair);
+		}
+		catch (Exception)
+		{
+			System.Windows.MessageBox.Show("Error converting old keypair and license files.", "12noon License Manager");
+		}
+
+		///
+		string GetNestedValue(XElement root, string tag, string name)
+		{
+			return root.Descendants(tag)
+						.FirstOrDefault(e => e.Attribute("name")?.Value == name)
+						?.Value ?? string.Empty;
+		}
 	}
 
 	/// <summary>
@@ -171,20 +307,42 @@ public partial class LicenseManager : ObservableObject
 	/// <remarks>
 	/// THIS FILE MUST BE KEPT SECRET.
 	/// </remarks>
-	/// <param name="pathLicense"></param>
-	public void SaveKeypair(string pathLicense)
+	/// <param name="pathKeypair"></param>
+	public void SaveKeypair(string pathKeypair)
 	{
 		new XDocument(
-			new XElement(ELEMENT_NAME_ROOT,
-				new XElement(ELEMENT_NAME_PASSPHRASE, Passphrase),
-				new XElement(ELEMENT_NAME_PRIVATEKEY, KeyPrivate),
-				new XElement(ELEMENT_NAME_PUBLICKEY, KeyPublic),
-				new XElement(ELEMENT_NAME_ID, Id),
-				new XElement(ELEMENT_NAME_PRODUCTID, ProductId),
-				new XElement(ELEMENT_NAME_PATHASSEMBLY, PathAssembly)
+			new XElement(ELEMENT_NAME_ROOT
+				, new XAttribute(ATTRIBUTE_NAME_VERSION, 2)
+				, new XElement(ELEMENT_NAME_ID, Id)
+				, new XElement(ELEMENT_NAME_SECRET
+					, new XElement(ELEMENT_NAME_PASSPHRASE, Passphrase)
+					, new XElement(ELEMENT_NAME_PRIVATEKEY, KeyPrivate)
+				)
+				, new XElement(ELEMENT_NAME_APP
+					, new XElement(ELEMENT_NAME_PUBLICKEY, KeyPublic)
+					, new XElement(ELEMENT_NAME_PRODUCT_ID, ProductId)
+				)
+				, new XElement(ELEMENT_NAME_CUSTOMER
+					, new XElement(ELEMENT_NAME_NAME, Name)
+					, new XElement(ELEMENT_NAME_EMAIL, Email)
+					, new XElement(ELEMENT_NAME_COMPANY, Company)
+				)
+				, new XElement(ELEMENT_NAME_PRODUCT
+					, new XElement(ELEMENT_NAME_PRODUCT_NAME, Product)
+					, new XElement(ELEMENT_NAME_VERSION, Version)
+					, new XElement(ELEMENT_NAME_PUBLISH_DATE, PublishDate?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)
+				)
+				, new XElement(ELEMENT_NAME_LICENSE
+					, new XElement(ELEMENT_NAME_STANDARD_OR_TRIAL, StandardOrTrial)
+					, new XElement(ELEMENT_NAME_EXPIRATION_DAYS, ExpirationDays)
+					, new XElement(ELEMENT_NAME_QUANTITY, Quantity)
+				)
+				, new XElement(ELEMENT_NAME_PATHASSEMBLY, PathAssembly)
 			)
 		)
-		.Save(Path.ChangeExtension(pathLicense, FileExtension_PrivateKey));
+		.Save(pathKeypair);
+
+		ClearDirtyFlag();
 	}
 
 	/// <summary>
@@ -198,32 +356,43 @@ public partial class LicenseManager : ObservableObject
 	///	Product
 	///	Version
 	///	Quantity
+	///	Name
+	///	Email
 	///
 	/// Optional properties:
+	///	ExpirationDays
+	///	Company
 	///	Path to Assembly
 	/// </summary>
 	/// <exception cref="InvalidCipherTextException">
 	/// You probably changed the passphrase and did not generate a new keypair.
 	/// </exception>
 	/// <param name="pathLicense">Full path to license file: MyApplication.lic</param>
-	public void CreateLicenseFile(string pathLicense)
+	public void SaveLicenseFile(string pathLicense)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(Passphrase));
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(KeyPrivate));
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(KeyPublic));
+		ArgumentException.ThrowIfNullOrWhiteSpace(Passphrase, nameof(Passphrase));
+		ArgumentException.ThrowIfNullOrWhiteSpace(KeyPrivate, nameof(KeyPrivate));
+		ArgumentException.ThrowIfNullOrWhiteSpace(KeyPublic, nameof(KeyPublic));
 
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(Id));
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(ProductId));
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(Product));
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(Version));
+		if (Id == Guid.Empty)
+		{
+			throw new ArgumentOutOfRangeException(nameof(Id), "Id must be a valid GUID.");
+		}
+		ArgumentException.ThrowIfNullOrWhiteSpace(ProductId, nameof(ProductId));
+		ArgumentException.ThrowIfNullOrWhiteSpace(Product, nameof(Product));
+		ArgumentException.ThrowIfNullOrWhiteSpace(Version, nameof(Version));
 		if (Quantity < 1)
 		{
-			throw new ArgumentOutOfRangeException(nameof(Quantity));
+			throw new ArgumentOutOfRangeException(nameof(Quantity), "License quantity must be one or more.");
 		}
-		// Expiration optional
+		// Expiration optional but cannot be negative
+		if (ExpirationDays < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(ExpirationDays), "Expiration days must be zero (no expiry) or positive.");
+		}
 
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(Name));
-		ArgumentException.ThrowIfNullOrWhiteSpace(nameof(Email));
+		ArgumentException.ThrowIfNullOrWhiteSpace(Name, nameof(Name));
+		ArgumentException.ThrowIfNullOrWhiteSpace(Email, nameof(Email));
 		// Company optional
 
 		/// Create a hash to verify that this license is associated with the caller.
@@ -242,6 +411,7 @@ public partial class LicenseManager : ObservableObject
 			.As(StandardOrTrial);
 		if (ExpirationDays > 0)
 		{
+			// ExpiresAt() converts passed date/time to UTC.
 			licenseBuilder.ExpiresAt(DateTime.Now.AddDays(ExpirationDays));
 		}
 		licenseBuilder
@@ -277,7 +447,8 @@ public partial class LicenseManager : ObservableObject
 
 		// OR: using (var xmlWriter = System.Xml.XmlWriter.Create(filePath)) { license.Save(xmlWriter); }
 
-		SaveKeypair(pathLicense);
+		// Note: Do not clear the dirty flag here because saving the license
+		// file is insufficient. The keypair file must also be saved.
 	}
 
 	/// <summary>
@@ -301,12 +472,12 @@ public partial class LicenseManager : ObservableObject
 		ArgumentException.ThrowIfNullOrWhiteSpace(productID);
 		ArgumentException.ThrowIfNullOrWhiteSpace(publicKey);
 
-		string pathLicense = GetLicensePath();
-		return IsThisLicenseValid(productID, publicKey, pathLicense, GetAssemblyFilePath());
+		return IsThisLicenseValid(productID, publicKey, GetLicensePath(), GetAssemblyFilePath());
 	}
 
 	/// <summary>
 	/// Validate the passed license file.
+	/// If the license is valid, it loads the license information into their corresponding properties.
 	/// All exceptions are caught.
 	/// </summary>
 	/// <remarks>
@@ -325,6 +496,17 @@ public partial class LicenseManager : ObservableObject
 		ArgumentException.ThrowIfNullOrWhiteSpace(publicKey);
 		ArgumentException.ThrowIfNullOrWhiteSpace(pathLicense);
 
+		try
+		{
+			return _isThisLicenseValid(productID, publicKey, pathLicense, pathAssembly);
+		}
+		finally
+		{
+			ClearDirtyFlag();
+		}
+	}
+	private string _isThisLicenseValid(string productID, string publicKey, string pathLicense, string pathAssembly)
+	{
 		ProductId = productID;
 		KeyPublic = publicKey;
 		IsLockedToAssembly = false;
@@ -350,7 +532,7 @@ public partial class LicenseManager : ObservableObject
 			string xmlLicense = File.ReadAllText(pathLicense, Encoding.UTF8);
 			License license = License.Load(xmlLicense);
 
-			List<IValidationFailure> validationFailures = new();
+			List<IValidationFailure> validationFailures = [];
 
 			/// Required
 			string identityProductLicense = license.AdditionalAttributes.Get(Attribute_Name_ProductIdentity);
@@ -388,7 +570,8 @@ public partial class LicenseManager : ObservableObject
 			IEnumerable<IValidationFailure> loadErrors =
 				license
 					.Validate()
-					.ExpirationDate()
+					// Note: Default parameter is DateTime.Now. This is a bug because the Expiration property returns UTC.
+					.ExpirationDate(MyNow.UtcNow())
 					.When(lic => !string.IsNullOrEmpty(expirationDays))
 					// Only check the expiry WHEN the license is Trial.
 					// https://github.com/junian/Standard.Licensing/issues/21
@@ -404,36 +587,12 @@ public partial class LicenseManager : ObservableObject
 						HowToResolve = MESSAGE_LICENSE_RESOLVE,
 					}
 				];
-			if (!loadErrors.Any())
+			if (loadErrors.Any())
 			{
-				Product = license.ProductFeatures.Get(ProductFeature_Name_Product);
-				Version = license.ProductFeatures.Get(ProductFeature_Name_Version);
-				string s = license.ProductFeatures.Get(ProductFeature_Name_PublishDate);
-				if (!string.IsNullOrEmpty(s))
-				{
-					PublishDate = DateOnly.Parse(s, CultureInfo.InvariantCulture);
-				}
-
-				StandardOrTrial = license.Type;
-				/// Get the number of days REMAINING until expiration.
-				if (license.Expiration.Date != DateTime.MaxValue.Date)
-				{
-					ExpirationDays = Convert.ToInt32(license.Expiration.Subtract(DateTime.UtcNow).TotalDays);
-				}
-				/// This is the number of days until expiration ORIGINALLY specified.
-				//if (!string.IsNullOrEmpty(expirationDays))
-				//{
-				//	ExpirationDays = Convert.ToInt32(expirationDays);
-				//}
-
-				Quantity = license.Quantity;
-
-				Name = license.Customer.Name;
-				Email = license.Customer.Email;
-				Company = license.Customer.Company;
+				validationFailures.AddRange(loadErrors);
 			}
-			validationFailures.AddRange(loadErrors);
 
+			// There may be other validation failures from earlier.
 			if (validationFailures.Count > 0)
 			{
 				List<string> errorMessages = [];
@@ -443,6 +602,35 @@ public partial class LicenseManager : ObservableObject
 				}
 				return string.Join(Environment.NewLine, errorMessages);
 			}
+
+			Product = license.ProductFeatures.Get(ProductFeature_Name_Product);
+			Version = license.ProductFeatures.Get(ProductFeature_Name_Version);
+			string s = license.ProductFeatures.Get(ProductFeature_Name_PublishDate);
+			if (!string.IsNullOrEmpty(s))
+			{
+				PublishDate = DateOnly.Parse(s, CultureInfo.InvariantCulture);
+			}
+
+			StandardOrTrial = license.Type;
+			/// Get the number of days REMAINING until expiration.
+			if (license.Expiration.Date != DateTime.MaxValue.Date)
+			{
+				// Expiration property is UTC.
+				ExpirationDays = Convert.ToInt32(license.Expiration.Subtract(DateTime.UtcNow).TotalDays);
+			}
+			/// This is the number of days until expiration ORIGINALLY specified.
+			//if (!string.IsNullOrEmpty(expirationDays))
+			//{
+			//	ExpirationDays = Convert.ToInt32(expirationDays);
+			//}
+
+			Quantity = license.Quantity;
+
+			Name = license.Customer.Name;
+			Email = license.Customer.Email;
+			Company = license.Customer.Company;
+
+			return string.Empty;
 		}
 		catch (FileNotFoundException ex)
 		{
@@ -452,8 +640,6 @@ public partial class LicenseManager : ObservableObject
 		{
 			return ex.Message;
 		}
-
-		return string.Empty;
 	}
 
 	private static string GetLicensePath()
@@ -471,7 +657,7 @@ public partial class LicenseManager : ObservableObject
 	/// <see cref="Assembly.GetEntryAssembly" />
 	/// <seealso cref="Assembly.GetExecutingAssembly" />
 	/// <returns>Path to the main (entry) assembly (.exe)</returns>
-	public static string GetAssemblyFilePath()
+	private static string GetAssemblyFilePath()
 	{
 		// AppContext.BaseDirectory is just the folder path (e.g., "C:\Path\To\").
 		Assembly? asm = Assembly.GetEntryAssembly();

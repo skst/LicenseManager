@@ -1,0 +1,8 @@
+﻿using System;
+
+namespace Shared;
+
+public static class MyNow
+{
+	public static Func<DateTime> UtcNow = () => DateTime.UtcNow;
+}

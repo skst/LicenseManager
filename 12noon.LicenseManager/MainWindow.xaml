@@ -8,8 +8,8 @@
 	xmlns:stdlic="clr-namespace:Standard.Licensing;assembly=Standard.Licensing"
 	mc:Ignorable="d"
 	WindowStartupLocation="CenterScreen"
-	SizeToContent="Height" Width="1000" Height="550"
-	Title="License Manager by 12noon"
+	SizeToContent="Height" Width="1000" Height="700"
+	Title="License Manager by 12noon LLC"
 	Icon="/LicenseManager_12noon;component/lock.png"
 	AllowDrop="True" DragOver="Window_DragOver" Drop="WindowFile_Drop"
 >
@@ -20,6 +20,8 @@
 		<shared:DateTimeToDateOnlyConverter x:Key="DateTimeToDateOnlyConverter" />
 		<shared:DaysToDateOnlyConverter x:Key="DaysToDateOnlyConverter" />
 		<shared:ValueToBooleanConverter x:Key="ValueToBooleanConverter" />
+		<shared:BooleanNotConverter x:Key="BooleanNotConverter" />
+		<shared:MultiValueToBooleanConverter x:Key="MultiValueToBooleanConverter" />
 	</Window.Resources>
 	<Grid Margin="5">
 		<Grid.ColumnDefinitions>
@@ -27,6 +29,8 @@
 			<ColumnDefinition Width="*" />
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
@@ -100,12 +104,34 @@
 				<ColumnDefinition Width="*" />
 			</Grid.ColumnDefinitions>
 
-			<Button Grid.Row="0" Grid.Column="0" Style="{StaticResource StyleButton}" Content="Load License &amp; Keys..." Click="LoadLicenseKeysButton_Click" />
-			<TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4" Text="You can also drag &amp; drop a license file to load and validate it." />
+			<Button Grid.Row="0" Grid.Column="0" Style="{StaticResource StyleButton}"
+				Content="Load Keypair (.private) or License (.lic) or Both..."
+				Click="LoadKeypairLicenseButton_Click"
+			/>
+			<TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4" Text="You can also drag &amp; drop a keypair file or license file or both." />
 		</Grid>
 
+		<!-- FILES -->
+		<Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" BorderBrush="Black" BorderThickness="2">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+
+				<Label		Grid.Row="0" Grid.Column="0" Content="Keypair file:" />
+				<TextBlock	Grid.Row="0" Grid.Column="1" Text="{Binding PathKeypair, RelativeSource={RelativeSource AncestorType=Window}}" d:Text="C:\Path\To\MyProduct.private" />
+				<Label		Grid.Row="1" Grid.Column="0" Content="License file:" />
+				<TextBlock	Grid.Row="1" Grid.Column="1" Text="{Binding PathLicense, RelativeSource={RelativeSource AncestorType=Window}}" d:Text="C:\Path\To\MyProduct.license" />
+			</Grid>
+		</Border>
+
 		<!-- KEYS -->
-		<Border Grid.Column="0" Grid.Row="1" Margin="5" BorderBrush="Black" BorderThickness="2">
+		<Border Grid.Row="3" Grid.Column="0" Margin="5" BorderBrush="Black" BorderThickness="2">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
@@ -129,18 +155,18 @@
 				/>
 
 				<Label		Grid.Row="1" Grid.Column="0" Content="Public key:" />
-				<TextBlock	Grid.Row="1" Grid.Column="1" Text="{Binding KeyPublic}" d:Text="57C33886-8527-4598-B7B8-BC62ECB9DBA6" />
+				<TextBlock	Grid.Row="1" Grid.Column="1" Text="{Binding KeyPublic, UpdateSourceTrigger=PropertyChanged}" d:Text="57C33886-8527-4598-B7B8-BC62ECB9DBA6" />
 				<Button		Grid.Row="1" Grid.Column="2" Style="{StaticResource StyleButton}"
 					IsEnabled="{Binding KeyPublic, Converter={StaticResource ValueToBooleanConverter}}"
 					Content="Copy" Click="CopyPublicKeyButton_Click"
 				/>
 
 				<Label	Grid.Row="2" Grid.Column="0" Content="ID:" />
-				<TextBox	Grid.Row="2" Grid.Column="1" Text="{Binding Id}" />
+				<TextBox	Grid.Row="2" Grid.Column="1" Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}" />
 				<Button	Grid.Row="2" Grid.Column="2" Style="{StaticResource StyleButton}" Content="New ID" Click="NewIdButton_Click" />
 
 				<Label	Grid.Row="3" Grid.Column="0" Content="Product ID:" />
-				<TextBox	Grid.Row="3" Grid.Column="1" Text="{Binding ProductId}" />
+				<TextBox	Grid.Row="3" Grid.Column="1" Text="{Binding ProductId, UpdateSourceTrigger=PropertyChanged}" />
 
 				<CheckBox	Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="CtlLockedAssembly" IsChecked="{Binding IsLockedToAssembly}" Content="Lock this license to only THIS instance of the assembly" />
 				<TextBlock	Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="1" TextWrapping="Wrap" HorizontalAlignment="Left" FontFamily="Consolas"
@@ -150,7 +176,7 @@
 			</Grid>
 		</Border>
 		<!-- PRODUCT -->
-		<Border Grid.Row="1" Grid.Column="1" Margin="5" BorderBrush="Black" BorderThickness="2">
+		<Border Grid.Row="3" Grid.Column="1" Margin="5" BorderBrush="Black" BorderThickness="2">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
@@ -164,16 +190,16 @@
 				</Grid.RowDefinitions>
 
 				<Label		Grid.Row="0" Grid.Column="0" Content="Product:" />
-				<TextBox		Grid.Row="0" Grid.Column="1" Text="{Binding Product}" />
+				<TextBox		Grid.Row="0" Grid.Column="1" Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" />
 				<Label		Grid.Row="1" Grid.Column="0" Content="Version:" />
-				<TextBox		Grid.Row="1" Grid.Column="1" Text="{Binding Version}" />
+				<TextBox		Grid.Row="1" Grid.Column="1" Text="{Binding Version, UpdateSourceTrigger=PropertyChanged}" />
 				<Label		Grid.Row="2" Grid.Column="0" Content="Date published:" />
 				<DatePicker	Grid.Row="2" Grid.Column="1" SelectedDate="{Binding PublishDate, Converter={StaticResource DateTimeToDateOnlyConverter}}" />
 			</Grid>
 		</Border>
 
 		<!-- LICENSE -->
-		<Border Grid.Row="2" Grid.Column="0" Margin="5" BorderBrush="Black" BorderThickness="2">
+		<Border Grid.Row="4" Grid.Column="0" Margin="5" BorderBrush="Black" BorderThickness="2">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
@@ -193,7 +219,7 @@
 				/>
 				<Label		Grid.Row="1" Grid.Column="0" Content="Expiration (days):" />
 				<shared:NumberUpDown Grid.Row="1" Grid.Column="1" MinWidth="48" Value="{Binding ExpirationDays, UpdateSourceTrigger=PropertyChanged}" AllowNull="False"
-					Minimum="1"
+					Minimum="0"
 					Padding="2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" VerticalAlignment="Center"
 				/>
 				<TextBlock	Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left"
@@ -208,7 +234,7 @@
 		</Border>
 
 		<!-- LICENSEE -->
-		<Border Grid.Row="2" Grid.Column="1" Margin="5" BorderBrush="Black" BorderThickness="2">
+		<Border Grid.Row="4" Grid.Column="1" Margin="5" BorderBrush="Black" BorderThickness="2">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
@@ -222,24 +248,57 @@
 				</Grid.RowDefinitions>
 
 				<Label	Grid.Row="0" Grid.Column="0" Content="Name:" />
-				<TextBox	Grid.Row="0" Grid.Column="1" Text="{Binding Name}" />
+				<TextBox	Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
 				<Label	Grid.Row="1" Grid.Column="0" Content="Email:" />
-				<TextBox	Grid.Row="1" Grid.Column="1" Text="{Binding Email}" />
+				<TextBox	Grid.Row="1" Grid.Column="1" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
 				<Label	Grid.Row="2" Grid.Column="0" Content="Company:" />
 				<TextBox	Grid.Row="2" Grid.Column="1" Text="{Binding Company}" />
 			</Grid>
 		</Border>
 
-		<UniformGrid Grid.Row="3" Grid.Column="0" Columns="3">
-			<Button Style="{StaticResource StyleButton}" Content="Create License..." Click="CreateLicenseButton_Click" />
-			<Button Style="{StaticResource StyleButton}" Content="Validate License" Click="ValidateLicenseButton_Click" />
+		<UniformGrid Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Columns="4">
+			<Button Style="{StaticResource StyleButton}" Content="Save Keypair..." Click="SaveKeypairButton_Click">
+				<Button.IsEnabled>
+					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
+						<Binding Path="IsDirty" />
+						<Binding Path="Passphrase" />
+						<Binding Path="KeyPublic" />
+						<Binding Path="Id" />
+						<Binding Path="ProductId" />
+					</MultiBinding>
+				</Button.IsEnabled>
+			</Button>
+			<Button Style="{StaticResource StyleButton}" Content="Save License..." Click="SaveLicenseButton_Click">
+				<Button.IsEnabled>
+					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
+						<Binding Path="IsDirty" />
+						<Binding Path="Passphrase" />
+						<Binding Path="KeyPublic" />
+						<Binding Path="Id" />
+						<Binding Path="ProductId" />
+						<Binding Path="Product" />
+						<Binding Path="Version" />
+						<Binding Path="Name" />
+						<Binding Path="Email" />
+					</MultiBinding>
+				</Button.IsEnabled>
+			</Button>
+			<Button Style="{StaticResource StyleButton}" Content="Validate License" Click="ValidateLicenseButton_Click">
+				<Button.IsEnabled>
+					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
+						<Binding Path="IsDirty" Converter="{StaticResource BooleanNotConverter}" />
+						<Binding Path="KeyPublic" />
+						<Binding Path="ProductId" />
+					</MultiBinding>
+				</Button.IsEnabled>
+			</Button>
 
 			<TextBlock x:Name="CtlLicenseValid" Text="Valid 🙂" Visibility="Collapsed" FontSize="20" FontWeight="Bold" Foreground="Green" />
 			<TextBlock x:Name="CtlLicenseInvalid" Text="Invalid 😞" Visibility="Collapsed" FontSize="20" FontWeight="Bold" Foreground="Firebrick" />
 		</UniformGrid>
 
-		<Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" BorderThickness="2" BorderBrush="DarkBlue" CornerRadius="5">
-			<TextBlock MaxWidth="700" HorizontalAlignment="Left" TextWrapping="Wrap" x:Name="CtlErrors"
+		<Border Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" BorderThickness="2" BorderBrush="DarkBlue" CornerRadius="5">
+			<TextBlock MaxWidth="700" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" x:Name="CtlErrors"
 				d:Text="Est suscipit ea tempor voluptua sadipscing dolore ea. Voluptua in sea ut eu stet sit eu sanctus."
 			/>
 		</Border>
