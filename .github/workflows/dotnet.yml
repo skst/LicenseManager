@@ -43,6 +43,8 @@ env:
   ARTIFACT_NAME: 12noon.LicenseManager
   ARTIFACT_PACKAGE: package-12noon.licensemanager
 
+  DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE: true
+
 concurrency:
   group: licensemanager-${{ github.ref }}-1
   cancel-in-progress: true
