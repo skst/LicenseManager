@@ -65,6 +65,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+          dotnet-quality: ga
 
       # Work around https://github.com/actions/setup-dotnet/issues/155
       - name: Clean solution
