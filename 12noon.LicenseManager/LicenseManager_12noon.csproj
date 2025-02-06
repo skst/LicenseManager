@@ -11,8 +11,8 @@
     <PackageIcon />
     <ApplicationIcon>lock.ico</ApplicationIcon>
     <Company>12noon LLC</Company>
-    <FileVersion>1.2.2.0</FileVersion>
-    <AssemblyVersion>1.2.2</AssemblyVersion>
+    <FileVersion>1.2.3.0</FileVersion>
+    <AssemblyVersion>1.2.3</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
