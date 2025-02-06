@@ -12,16 +12,4 @@
 		<FileVersion>1.2.3.0</FileVersion>
 		<AssemblyVersion>1.2.3</AssemblyVersion>
 	</PropertyGroup>
-
-	<PropertyGroup>
-
-		<!-- No need to use $(MSBuildProjectName) because VS creates subfolders in obj\ and bin\ -->
-		<!--
-		<ArtifactsPath>C:\VSIntermediate\$(SolutionName)\artifacts</ArtifactsPath>
-		-->
-
-		<!-- Must hardcode path for when using `dotnet` from command line using just CSPROJ file. -->
-		<ArtifactsPath>C:\VSIntermediate\LicenseManager\artifacts</ArtifactsPath>
-
-	</PropertyGroup>
 </Project>
