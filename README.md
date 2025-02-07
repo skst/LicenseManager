@@ -1,9 +1,7 @@
 # License Manager by [12noon LLC](https://12noon.com)
 
-[![build](https://github.com/skst/LicenseManager/actions/workflows/dotnet.yml/badge.svg)](https://github.com/skst/LicenseManager/actions/workflows/dotnet.yml)
-
 [![](https://img.shields.io/github/v/release/skst/LicenseManager.svg?label=latest%20release&color=007edf)](https://github.com/skst/LicenseManager/releases/latest)
-
+[![build](https://github.com/skst/LicenseManager/actions/workflows/dotnet.yml/badge.svg)](https://github.com/skst/LicenseManager/actions/workflows/dotnet.yml)
 [![GitHub last commit](https://img.shields.io/github/last-commit/skst/LicenseManager)](https://github.com/skst/LicenseManager)
 
 This is a graphical front-end for the [Standard.Licensing](https://github.com/junian/Standard.Licensing) project.
@@ -41,7 +39,7 @@ The publish date can represent any date you want.
 | Property | Usage |
 |----------|-------|
 | Type | Standard or trial license |
-| Expiration | The date on which the license expires. |
+| Expiration | The number of days in which the license expires. Zero means no expiry. |
 | Quantity | Minimum value is one (1) |
 
 The licensed application can check the type to permit only certain features.
@@ -64,18 +62,19 @@ This information can be displayed by the licensed application.
 
 ### Create a New License
 
-Note that the public key and product ID are passed by the licensed application,
+Note that the public key and product ID are passed by the licensed application
 to validate the license, so you only want to create a new keypair or change the
-product ID if you want to rebuild the licensed application and create new licenses
-for anyone who will use the new build.
+product ID if you want to change them in the licensed application, rebuild it,
+and create new licenses for anyone who will use the new build.
 
 1. Create a keypair by entering a value for _Passphrase_ and pressing _Create Keypair_ button.
 1. Enter a _Product ID_.
 1. Optionally, lock the license to a specific build of the licensed application.
 1. Fill in the product information, license information, and licensee information.
-1. Press the _Create License..._ button. This will prompt you for where to save the `.lic` and `.private` files.
+1. Press the _Save Keypair..._ button. This will prompt you for where to save the `.private` file.
+1. Press the _Save License..._ button. This will prompt you for where to save the `.lic` file.
 
-The `.private` file contains all of the secret information used to create the license.
+The `.private` file contains all of the information used to create the license, including the secrets.
 Do keep the `.private` file somewhere safe.
 Do NOT add the `.private` file to source control.
 You will need it to create more licenses for your licensed application
@@ -83,16 +82,17 @@ You will need it to create more licenses for your licensed application
 
 ### Create a License Based on an Existing License
 
-1. Press the *Load License & Keys* button to select a `.lic` file.
-1. This will validate the license file.
+1. Press the *Load Keypair or License or Both...* button to select a `.private` or
+`.lic` file (or both of them). Alternatively, you can drag/drop a `.private` and/or `.lic` file.
+1. After loading both files, License Manager will validate the license file.
 
-If the license is invalid (_e.g._, the assembly has changed), you can create a new (valid) license.
-
-You can also drag/drop an existing `.lic` file (with its associated `.private` file in same folder).
+If the license is invalid (_e.g._, it expired or the assembly has changed), you can create a new (valid) license.
 
 1. Now you can update the product, license, or licensee information as needed.
-1. Press the _Create License..._ button to create a new license. This will
-prompt you for where to save the `.lic` file. (The `.private` file will be saved in the same folder.)
+1. Press the _Save Keypair..._ button to save the keypair file. This will
+prompt you for where to save the `.private` file.
+1. Press the _Save License..._ button to create a new license. This will
+prompt you for where to save the `.lic` file.
 
 ### The Licensed Application
 
