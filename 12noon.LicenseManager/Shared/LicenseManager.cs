@@ -412,7 +412,7 @@ public partial class LicenseManager : ObservableObject
 		if (ExpirationDays > 0)
 		{
 			// ExpiresAt() converts passed date/time to UTC.
-			licenseBuilder.ExpiresAt(DateTime.Now.AddDays(ExpirationDays));
+			licenseBuilder.ExpiresAt(MyNow.Now().AddDays(ExpirationDays));
 		}
 		licenseBuilder
 			.WithMaximumUtilization(Quantity)
