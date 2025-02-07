@@ -62,7 +62,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
           dotnet-quality: ga
 
       # Work around https://github.com/actions/setup-dotnet/issues/155
@@ -75,8 +75,10 @@ jobs:
       - name: Build
         run: dotnet build ${{env.SOLUTION_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
 
+      # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
+      # verbosity detailed
       - name: Test
-        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity minimal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
+        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity normal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
 
       - name: Build single-file deployment
         # Publish to sibling `release` folder for github-tag-action step.
