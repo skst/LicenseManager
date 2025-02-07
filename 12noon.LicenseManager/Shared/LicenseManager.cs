@@ -412,7 +412,7 @@ public partial class LicenseManager : ObservableObject
 		if (ExpirationDays > 0)
 		{
 			// ExpiresAt() converts passed date/time to UTC.
-			licenseBuilder.ExpiresAt(DateTime.Now.AddDays(ExpirationDays));
+			licenseBuilder.ExpiresAt(MyNow.Now().AddDays(ExpirationDays));
 		}
 		licenseBuilder
 			.WithMaximumUtilization(Quantity)
@@ -571,7 +571,8 @@ public partial class LicenseManager : ObservableObject
 				license
 					.Validate()
 					// Note: Default parameter is DateTime.Now. This is a bug because the Expiration property returns UTC.
-					.ExpirationDate(MyNow.UtcNow())
+					// But (somehow), Expiration is Local by the time this comparison happens.
+					.ExpirationDate(MyNow.Now())
 					.When(lic => !string.IsNullOrEmpty(expirationDays))
 					// Only check the expiry WHEN the license is Trial.
 					// https://github.com/junian/Standard.Licensing/issues/21

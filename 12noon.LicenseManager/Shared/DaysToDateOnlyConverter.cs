@@ -44,7 +44,7 @@ public sealed class DaysToDateOnlyConverter : IValueConverter
 			return Binding.DoNothing;
 		}
 
-		return DateOnly.FromDateTime(DateTime.Now.AddDays(days));
+		return DateOnly.FromDateTime(MyNow.Now().AddDays(days));
 	}
 
 	/// <summary>
@@ -68,6 +68,6 @@ public sealed class DaysToDateOnlyConverter : IValueConverter
 		}
 
 		DateOnly dt = (DateOnly)value;
-		return DateTime.Now.Subtract(dt.ToDateTime(new TimeOnly())).TotalDays;
+		return MyNow.Now().Subtract(dt.ToDateTime(new TimeOnly())).TotalDays;
 	}
 }
