@@ -76,7 +76,7 @@ jobs:
         run: dotnet build ${{env.SOLUTION_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
 
       - name: Test
-        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity minimal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
+        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity diagnostic --logger:"console;verbosity=diagnostic" --configuration Debug --runtime win-x64
 
       - name: Build single-file deployment
         # Publish to sibling `release` folder for github-tag-action step.
