@@ -75,10 +75,9 @@ jobs:
       - name: Build
         run: dotnet build ${{env.SOLUTION_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
 
+      # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
       - name: Test
-        run: |
-          dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity detailed --logger:"console;verbosity=detailed" --configuration Debug --runtime win-x64
-          type "12noon.LicenseManager.UnitTests\bin\Debug\net9.0-windows\win-x64\TestResults\LicenseManager_12noon.UnitTests_net9.0-windows_x64.log"
+        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity detailed --logger:"console;verbosity=detailed" --configuration Debug --runtime win-x64
 
       - name: Build single-file deployment
         # Publish to sibling `release` folder for github-tag-action step.
