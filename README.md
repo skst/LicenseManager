@@ -6,7 +6,7 @@
 
 This is a graphical front-end for the [Standard.Licensing](https://github.com/junian/Standard.Licensing) project.
 
-![License Manager](https://raw.githubusercontent.com/skst/LicenseManager/20df8e069ceca6100f755736bcc51b8536e9c180/12noon.LicenseManager.png)
+![License Manager](https://raw.githubusercontent.com/skst/LicenseManager/master/12noon.LicenseManager.png)
 
 ## Features
 
