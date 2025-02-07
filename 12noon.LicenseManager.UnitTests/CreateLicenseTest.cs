@@ -540,44 +540,38 @@ public class CreateLicenseTest
 		string publicKey = manager.KeyPublic;
 
 		/// Assert
-		/// Validate license in 23:59:59
+		/// Validate license in 23:59:59 (NOT EXPIRED)
 		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1).AddMinutes(-1);
-		Shared.MyNow.Now = () => DateTime.Now.AddDays(1).AddMinutes(-1);
 		manager = new();
 		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
 		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 
-		/// Validate license in 1 day
+		/// Validate license in 1 day (NOT EXPIRED)
 		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1);
-		Shared.MyNow.Now = () => DateTime.Now.AddDays(1);
 		manager = new();
 		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
 		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 
-		/// Validate license in 23:59:59
+		/// Validate license in 23:59:59 (NOT EXPIRED)
 		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1).AddMinutes(1);
-		Shared.MyNow.Now = () => DateTime.Now.AddDays(1).AddMinutes(1);
 		manager = new();
 		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
 		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 
-		/// Validate license in 47:59:59
+		/// Validate license in 47:59:59 (NOT EXPIRED)
 		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(2).AddMinutes(-1);
-		Shared.MyNow.Now = () => DateTime.Now.AddDays(2).AddMinutes(-1);
 		manager = new();
 		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
+		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 
-		/// Validate license in 2 days
+		/// Validate license in 2 days (EXPIRED)
 		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(2);
-		Shared.MyNow.Now = () => DateTime.Now.AddDays(2);
 		manager = new();
 		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
 
-		/// Validate license in 3 days
+		/// Validate license in 3 days (EXPIRED)
 		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(3);
-		Shared.MyNow.Now = () => DateTime.Now.AddDays(3);
 		manager = new();
 		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));

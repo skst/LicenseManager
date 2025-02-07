@@ -5,5 +5,6 @@ namespace Shared;
 public static class MyNow
 {
 	public static Func<DateTime> UtcNow = () => DateTime.UtcNow;
-	public static Func<DateTime> Now = () => DateTime.Now;
+
+	public static Func<DateTime> Now = () => UtcNow().ToLocalTime();
 }
