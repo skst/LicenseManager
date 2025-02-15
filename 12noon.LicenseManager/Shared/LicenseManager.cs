@@ -95,6 +95,8 @@ public partial class LicenseManager : ObservableObject
 	[ObservableProperty]
 	private LicenseType _standardOrTrial = LicenseType.Standard;
 	[ObservableProperty]
+	private DateTime _expirationDate;
+	[ObservableProperty]
 	private int _expirationDays;
 	[ObservableProperty]
 	private int _quantity = 1;
@@ -617,6 +619,7 @@ public partial class LicenseManager : ObservableObject
 			if (license.Expiration.Date != DateTime.MaxValue.Date)
 			{
 				// Expiration property is UTC.
+				ExpirationDate = license.Expiration.Date;
 				ExpirationDays = Convert.ToInt32(license.Expiration.Subtract(DateTime.UtcNow).TotalDays);
 			}
 			/// This is the number of days until expiration ORIGINALLY specified.
