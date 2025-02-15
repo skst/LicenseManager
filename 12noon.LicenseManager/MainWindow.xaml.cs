@@ -145,7 +145,13 @@ public partial class MainWindow : Window
 			DefaultDirectory = PathDefaultFolder,
 			AddToRecent = false,
 			Multiselect = true,
-			Filter = $"Keypair Files|*{Shared.LicenseManager.FileExtension_PrivateKey}|License Files|*{Shared.LicenseManager.FileExtension_License}|All Files|*.*",
+			Filter =
+$$"""
+Keypair/License|*{{Shared.LicenseManager.FileExtension_PrivateKey}};*{{Shared.LicenseManager.FileExtension_License}}|
+Keypair Files|*{{Shared.LicenseManager.FileExtension_PrivateKey}}|
+License Files|*{{Shared.LicenseManager.FileExtension_License}}|
+All Files|*.*
+""",
 			DefaultExt = Shared.LicenseManager.FileExtension_PrivateKey,
 		};
 
