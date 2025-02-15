@@ -167,6 +167,10 @@
 
 				<Label	Grid.Row="3" Grid.Column="0" Content="Product ID:" />
 				<TextBox	Grid.Row="3" Grid.Column="1" Text="{Binding ProductId, UpdateSourceTrigger=PropertyChanged}" />
+				<Button	Grid.Row="3" Grid.Column="2" Style="{StaticResource StyleButton}"
+					 IsEnabled="{Binding ProductId, Converter={StaticResource ValueToBooleanConverter}}"
+					 Content="Copy" Click="CopyProductIdButton_Click"
+				/>
 
 				<CheckBox	Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="CtlLockedAssembly" IsChecked="{Binding IsLockedToAssembly}" Content="Lock this license to only THIS instance of the assembly" />
 				<TextBlock	Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="1" TextWrapping="Wrap" HorizontalAlignment="Left" FontFamily="Consolas"

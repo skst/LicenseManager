@@ -68,6 +68,18 @@ public partial class MainWindow : Window
 		}
 	}
 
+	private void CopyProductIdButton_Click(object sender, RoutedEventArgs e)
+	{
+		try
+		{
+			Clipboard.SetText(TheLicenseManager.ProductId);
+		}
+		catch (System.Runtime.InteropServices.ExternalException)
+		{
+			// Another app has the clipboard open
+		}
+	}
+
 	private void NewIdButton_Click(object sender, RoutedEventArgs e)
 	{
 		TheLicenseManager.NewID();
