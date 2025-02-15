@@ -79,8 +79,6 @@ public partial class MainWindow : Window
 	{
 		string currentPath = TheLicenseManager.PathAssembly;
 
-		TheLicenseManager.PathAssembly = string.Empty;
-
 		OpenFileDialog ofd = new()
 		{
 			ClientGuid = new(FileDialogGuid),
