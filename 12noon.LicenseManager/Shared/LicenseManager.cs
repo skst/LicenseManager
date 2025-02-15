@@ -143,10 +143,12 @@ public partial class LicenseManager : ObservableObject
 	/// Indicates if any of the properties have changed.
 	/// (If so, the keypair file must be saved.)
 	/// </summary>
-	//public bool IsDirty => _isDirty;
-	public void ClearDirtyFlag() => IsDirty = false;
+	private void ClearKeypairDirtyFlag() => IsKeypairDirty = false;
+	public void ClearLicenseDirtyFlag() => IsLicenseDirty = false;
 	[ObservableProperty]
-	private bool _isDirty = false;
+	private bool _isKeypairDirty = false;
+	[ObservableProperty]
+	private bool _isLicenseDirty = false;
 	/// <summary>
 	/// We need to know if changes have been made to any of the properties.
 	/// If so, we require the user to save the keypair file
@@ -157,10 +159,11 @@ public partial class LicenseManager : ObservableObject
 	{
 		base.OnPropertyChanged(e);
 
-		// Changing the IsDirty property does not make the object dirty.
-		if (e.PropertyName != nameof(IsDirty))
+		// Changing the IsKeypairDirty or IsLicenseDirty property does not make the object dirty.
+		if ((e.PropertyName != nameof(IsKeypairDirty)) && (e.PropertyName != nameof(IsLicenseDirty)))
 		{
-			IsDirty = true;
+			IsKeypairDirty = true;
+			IsLicenseDirty = true;
 		}
 	}
 
@@ -234,7 +237,7 @@ public partial class LicenseManager : ObservableObject
 		PathAssembly = root.Element(ELEMENT_NAME_PATHASSEMBLY)!.Value;
 		IsLockedToAssembly = !string.IsNullOrEmpty(PathAssembly);
 
-		ClearDirtyFlag();
+		ClearKeypairDirtyFlag();
 	}
 
 	/// <summary>
@@ -344,7 +347,7 @@ public partial class LicenseManager : ObservableObject
 		)
 		.Save(pathKeypair);
 
-		ClearDirtyFlag();
+		ClearKeypairDirtyFlag();
 	}
 
 	/// <summary>
@@ -449,8 +452,7 @@ public partial class LicenseManager : ObservableObject
 
 		// OR: using (var xmlWriter = System.Xml.XmlWriter.Create(filePath)) { license.Save(xmlWriter); }
 
-		// Note: Do not clear the dirty flag here because saving the license
-		// file is insufficient. The keypair file must also be saved.
+		ClearLicenseDirtyFlag();
 	}
 
 	/// <summary>
@@ -504,7 +506,7 @@ public partial class LicenseManager : ObservableObject
 		}
 		finally
 		{
-			ClearDirtyFlag();
+			ClearLicenseDirtyFlag();
 		}
 	}
 	private string _isThisLicenseValid(string productID, string publicKey, string pathLicense, string pathAssembly)

@@ -20,7 +20,6 @@
 		<shared:DateTimeToDateOnlyConverter x:Key="DateTimeToDateOnlyConverter" />
 		<shared:DaysToDateOnlyConverter x:Key="DaysToDateOnlyConverter" />
 		<shared:ValueToBooleanConverter x:Key="ValueToBooleanConverter" />
-		<shared:BooleanNotConverter x:Key="BooleanNotConverter" />
 		<shared:MultiValueToBooleanConverter x:Key="MultiValueToBooleanConverter" />
 	</Window.Resources>
 	<Grid Margin="5">
@@ -105,7 +104,7 @@
 			</Grid.ColumnDefinitions>
 
 			<Button Grid.Row="0" Grid.Column="0" Style="{StaticResource StyleButton}"
-				Content="Load Keypair (.private) or License (.lic) or Both..."
+				Content="Load Keypair or License or Both..."
 				Click="LoadKeypairLicenseButton_Click"
 			/>
 			<TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4" Text="You can also drag &amp; drop a keypair file or license file or both." />
@@ -151,7 +150,7 @@
 				<TextBox	Grid.Row="0" Grid.Column="1" Text="{Binding Passphrase, UpdateSourceTrigger=PropertyChanged}" d:Text="Lorem Ipsum Dolor Set" />
 				<Button Grid.Row="0" Grid.Column="2" Style="{StaticResource StyleButton}"
 					IsEnabled="{Binding Passphrase, Converter={StaticResource ValueToBooleanConverter}}"
-					Content="Create Keypair" Click="CreateKeypairButton_Click"
+					Content="New Keypair" Click="CreateKeypairButton_Click"
 				/>
 
 				<Label		Grid.Row="1" Grid.Column="0" Content="Public key:" />
@@ -264,7 +263,7 @@
 			<Button Style="{StaticResource StyleButton}" Content="Save Keypair..." Click="SaveKeypairButton_Click">
 				<Button.IsEnabled>
 					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
-						<Binding Path="IsDirty" />
+						<Binding Path="IsKeypairDirty" />
 						<Binding Path="Passphrase" />
 						<Binding Path="KeyPublic" />
 						<Binding Path="Id" />
@@ -275,7 +274,7 @@
 			<Button Style="{StaticResource StyleButton}" Content="Save License..." Click="SaveLicenseButton_Click">
 				<Button.IsEnabled>
 					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
-						<Binding Path="IsDirty" />
+						<Binding Path="IsLicenseDirty" />
 						<Binding Path="Passphrase" />
 						<Binding Path="KeyPublic" />
 						<Binding Path="Id" />
@@ -284,15 +283,6 @@
 						<Binding Path="Version" />
 						<Binding Path="Name" />
 						<Binding Path="Email" />
-					</MultiBinding>
-				</Button.IsEnabled>
-			</Button>
-			<Button Style="{StaticResource StyleButton}" Content="Validate License" Click="ValidateLicenseButton_Click">
-				<Button.IsEnabled>
-					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
-						<Binding Path="IsDirty" Converter="{StaticResource BooleanNotConverter}" />
-						<Binding Path="KeyPublic" />
-						<Binding Path="ProductId" />
 					</MultiBinding>
 				</Button.IsEnabled>
 			</Button>

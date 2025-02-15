@@ -42,6 +42,16 @@ public partial class MainWindow : Window
 	public MainWindow()
 	{
 		InitializeComponent();
+
+		TheLicenseManager.PropertyChanged += (s, e) =>
+		{
+			if (TheLicenseManager.IsKeypairDirty || TheLicenseManager.IsLicenseDirty)
+			{
+				CtlLicenseValid.Visibility = Visibility.Collapsed;
+				CtlLicenseInvalid.Visibility = Visibility.Collapsed;
+				CtlErrors.Text = string.Empty;
+			}
+		};
 	}
 
 	/// <summary>
@@ -115,7 +125,7 @@ public partial class MainWindow : Window
 
 	private void Window_DragOver(object sender, DragEventArgs e)
 	{
-		e.Effects = TheLicenseManager.IsDirty ? DragDropEffects.None : DragDropEffects.Copy;
+		e.Effects = (TheLicenseManager.IsKeypairDirty || TheLicenseManager.IsLicenseDirty) ? DragDropEffects.None : DragDropEffects.Copy;
 		e.Handled = true;
 	}
 
@@ -210,7 +220,7 @@ All Files|*.*
 			}
 			else
 			{
-				MessageBox.Show("Please load or create a keypair file before validating a license.", Title);
+				MessageBox.Show("Please create or load a keypair file before loading a license.", Title);
 			}
 		}
 	}
@@ -268,23 +278,12 @@ All Files|*.*
 		try
 		{
 			TheLicenseManager.SaveLicenseFile(PathLicense);
-			SetValidationDisplay(isValid: null);
+			ValidateLicense(PathLicense);
 		}
 		catch (Exception ex)
 		{
 			MessageBox.Show($"Unable to save license: {ex}", Title);
 		}
-	}
-
-	private void ValidateLicenseButton_Click(object sender, RoutedEventArgs e)
-	{
-		if (string.IsNullOrEmpty(PathLicense))
-		{
-			CtlErrors.Text = "License file must be loaded or saved in order to validate it.";
-			return;
-		}
-
-		ValidateLicense(PathLicense);
 	}
 
 	private void LoadKeypair(string pathKeypair)
