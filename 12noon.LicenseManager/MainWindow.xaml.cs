@@ -125,7 +125,47 @@ public partial class MainWindow : Window
 
 	private void Window_DragOver(object sender, DragEventArgs e)
 	{
-		e.Effects = (TheLicenseManager.IsKeypairDirty || TheLicenseManager.IsLicenseDirty) ? DragDropEffects.None : DragDropEffects.Copy;
+		if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+		{
+			e.Effects = DragDropEffects.None;
+		}
+		else
+		{
+			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+			if (files.Length > 2)
+			{
+				e.Effects = DragDropEffects.None;
+			}
+			else
+			{
+				bool validFiles = true;
+				foreach (var file in files)
+				{
+					if (file.EndsWith(LicenseManager.FileExtension_PrivateKey, StringComparison.OrdinalIgnoreCase))
+					{
+						if (TheLicenseManager.IsKeypairDirty)
+						{
+							validFiles = false;
+							break;
+						}
+					}
+					else if (file.EndsWith(LicenseManager.FileExtension_License, StringComparison.OrdinalIgnoreCase))
+					{
+						if (TheLicenseManager.IsLicenseDirty)
+						{
+							validFiles = false;
+							break;
+						}
+					}
+					else
+					{
+						validFiles = false;
+						break;
+					}
+				}
+				e.Effects = validFiles ? DragDropEffects.Copy : DragDropEffects.None;
+			}
+		}
 		e.Handled = true;
 	}
 
@@ -139,7 +179,7 @@ public partial class MainWindow : Window
 		string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 		if (files.Length > 2)
 		{
-			MessageBox.Show($"Please drop a keypair {Shared.LicenseManager.FileExtension_PrivateKey} file, a license file {Shared.LicenseManager.FileExtension_License}, or both.", Title);
+			MessageBox.Show($"Please drop a keypair {LicenseManager.FileExtension_PrivateKey} file, a license file {LicenseManager.FileExtension_License}, or both.", Title);
 			return;
 		}
 
@@ -157,12 +197,12 @@ public partial class MainWindow : Window
 			Multiselect = true,
 			Filter =
 $$"""
-Keypair/License|*{{Shared.LicenseManager.FileExtension_PrivateKey}};*{{Shared.LicenseManager.FileExtension_License}}|
-Keypair Files|*{{Shared.LicenseManager.FileExtension_PrivateKey}}|
-License Files|*{{Shared.LicenseManager.FileExtension_License}}|
+Keypair/License|*{{LicenseManager.FileExtension_PrivateKey}};*{{LicenseManager.FileExtension_License}}|
+Keypair Files|*{{LicenseManager.FileExtension_PrivateKey}}|
+License Files|*{{LicenseManager.FileExtension_License}}|
 All Files|*.*
 """,
-			DefaultExt = Shared.LicenseManager.FileExtension_PrivateKey,
+			DefaultExt = LicenseManager.FileExtension_PrivateKey,
 		};
 
 		if (!ofd.ShowDialog().GetValueOrDefault())
@@ -181,7 +221,7 @@ All Files|*.*
 		string? licenseFile = null;
 		foreach (var file in files)
 		{
-			if (file.EndsWith(Shared.LicenseManager.FileExtension_PrivateKey, StringComparison.OrdinalIgnoreCase))
+			if (file.EndsWith(LicenseManager.FileExtension_PrivateKey, StringComparison.OrdinalIgnoreCase))
 			{
 				if (keypairFile is not null)
 				{
@@ -190,7 +230,7 @@ All Files|*.*
 				}
 				keypairFile = file;
 			}
-			else if (file.EndsWith(Shared.LicenseManager.FileExtension_License, StringComparison.OrdinalIgnoreCase))
+			else if (file.EndsWith(LicenseManager.FileExtension_License, StringComparison.OrdinalIgnoreCase))
 			{
 				if (licenseFile is not null)
 				{
@@ -201,7 +241,7 @@ All Files|*.*
 			}
 			else
 			{
-				MessageBox.Show($"Please select only {Shared.LicenseManager.FileExtension_PrivateKey} or {Shared.LicenseManager.FileExtension_License} files.", Title);
+				MessageBox.Show($"Please select only {LicenseManager.FileExtension_PrivateKey} or {LicenseManager.FileExtension_License} files.", Title);
 				return;
 			}
 		}
@@ -233,8 +273,8 @@ All Files|*.*
 			Title = "Save Keypair File",
 			DefaultDirectory = PathDefaultFolder,
 			AddToRecent = false,
-			Filter = $"Keypair Files|*{Shared.LicenseManager.FileExtension_PrivateKey}",
-			DefaultExt = Shared.LicenseManager.FileExtension_PrivateKey,
+			Filter = $"Keypair Files|*{LicenseManager.FileExtension_PrivateKey}",
+			DefaultExt = LicenseManager.FileExtension_PrivateKey,
 			FileName = PathKeypair,
 		};
 
@@ -263,8 +303,8 @@ All Files|*.*
 			Title = "Save License File",
 			DefaultDirectory = PathDefaultFolder,
 			AddToRecent = false,
-			Filter = $"License Files|*{Shared.LicenseManager.FileExtension_License}",
-			DefaultExt = Shared.LicenseManager.FileExtension_License,
+			Filter = $"License Files|*{LicenseManager.FileExtension_License}",
+			DefaultExt = LicenseManager.FileExtension_License,
 			FileName = PathLicense,
 		};
 
@@ -289,7 +329,7 @@ All Files|*.*
 	private void LoadKeypair(string pathKeypair)
 	{
 		Debug.Assert(!string.IsNullOrEmpty(pathKeypair));
-		Debug.Assert(pathKeypair.EndsWith(Shared.LicenseManager.FileExtension_PrivateKey, StringComparison.OrdinalIgnoreCase));
+		Debug.Assert(pathKeypair.EndsWith(LicenseManager.FileExtension_PrivateKey, StringComparison.OrdinalIgnoreCase));
 		Debug.Assert(System.IO.File.Exists(pathKeypair));
 
 		SetValidationDisplay(isValid: null);
@@ -298,11 +338,13 @@ All Files|*.*
 		{
 			TheLicenseManager.LoadKeypair(pathKeypair);
 			PathKeypair = pathKeypair;
+			PathLicense = string.Empty;
 		}
 		catch (Exception)
 		{
 			// Example: .private file does not exist.
 			PathKeypair = string.Empty;
+			PathLicense = string.Empty;
 			CtlErrors.Text = "Error loading keypair file. It might be in an old format and need to be recreated.";
 		}
 	}
@@ -313,24 +355,26 @@ All Files|*.*
 
 		PathLicense = pathLicense;
 
-		string errorMessages = TheLicenseManager.IsThisLicenseValid(
-																	TheLicenseManager.ProductId,
-																	TheLicenseManager.KeyPublic,
-																	pathLicense,
-																	TheLicenseManager.PathAssembly);
-		if (string.IsNullOrEmpty(errorMessages))
+		bool isValid = TheLicenseManager.IsThisLicenseValid(
+																			TheLicenseManager.ProductId,
+																			TheLicenseManager.KeyPublic,
+																			pathLicense,
+																			TheLicenseManager.PathAssembly,
+																			out string messages);
+		if (isValid)
 		{
 			SetValidationDisplay(isValid: true);
 		}
 		else
 		{
 			// Reload the properties that were cleared to validate the license.
-			// (Reload the keypair file first to avoid clearing the error message.)
+			// (Reload first to avoid clearing the error message.)
 			LoadKeypair(PathKeypair);
 
 			SetValidationDisplay(isValid: false);
-			CtlErrors.Text = errorMessages;
 		}
+
+		CtlErrors.Text = messages;
 	}
 
 	/// <summary>
@@ -342,7 +386,7 @@ All Files|*.*
 		CtlLicenseValid.Visibility = (isValid ?? false) ? Visibility.Visible : Visibility.Collapsed;
 		CtlLicenseInvalid.Visibility = (isValid ?? true) ? Visibility.Collapsed : Visibility.Visible;
 
-		if (isValid ?? true)
+		if (isValid is null)
 		{
 			CtlErrors.Text = string.Empty;
 		}

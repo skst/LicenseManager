@@ -96,25 +96,35 @@ prompt you for where to save the `.lic` file.
 
 ### The Licensed Application
 
-The licensed application must use the `LicenseManager` class to validate the license.
+You can use the `Standard.Licensing` NuGet package to validate the license in your application.
+
+Alternatively, you can use the `LicenseFile` class in this project to validate the license.
 This means that it will also need to include the following NuGet packages:
-* Standard.Licensing
-* CommunityToolkit.Mvvm
+
+* `Standard.Licensing`
+
+You will also need to copy the following files from this project:
+
+* `LicenseFile.cs`
+* `SecureHash.cs`
+* `MyNow.cs`
+
+___Note: I am working on publishing a NuGet package for clients. (Hopefully, in Feb 2025.)___
 
 The licensed application must pass the `Product ID` and the `Public Key` to the license validation API.
 
 ```
-LicenseManager manager = new();
-string errorMessages = manager.IsLicenseValid(productID: "... My Product ID ...", publicKey: "... public key ...");
-if (!string.IsNullOrEmpty(errorMessages))
+LicenseFile license = new();
+bool isValid = license.IsLicenseValid(productID: "My Product ID", publicKey: "The Public Key", out string messages);
+if (!isValid)
 {
 	// INVALID
-	MessageBox.Show("The license is invalid. " + errorMessages);
+	MessageBox.Show("The license is invalid. " + messages);
 	return;
 }
 
 // VALID
-if (manager.StandardOrTrial == LicenseType.Trial)
+if (license.StandardOrTrial == LicenseType.Trial)
 {
 	// Example: LIMIT FEATURES FOR TRIAL
 }

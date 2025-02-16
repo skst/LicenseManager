@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shared;
+namespace LicenseManager_12noon.Client;
 
 public static class MyNow
 {

@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using LicenseManager_12noon.Client;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Standard.Licensing;
 using System.Diagnostics;
 
@@ -32,8 +33,8 @@ public class CreateLicenseTest
 	[TestInitialize]
 	public void TestSetup()
 	{
-		PathLicenseFile = Path.Combine(PathTestFolder, _testContext.TestName + Shared.LicenseManager.FileExtension_License);
-		PathKeypairFile = Path.Combine(PathTestFolder, _testContext.TestName + Shared.LicenseManager.FileExtension_PrivateKey);
+		PathLicenseFile = Path.Combine(PathTestFolder, _testContext.TestName + LicenseManager_12noon.LicenseManager.FileExtension_License);
+		PathKeypairFile = Path.Combine(PathTestFolder, _testContext.TestName + LicenseManager_12noon.LicenseManager.FileExtension_PrivateKey);
 	}
 
 	[TestCleanup]
@@ -45,7 +46,7 @@ public class CreateLicenseTest
 	[TestMethod]
 	public void TestCreateKeypair()
 	{
-		Shared.LicenseManager manager = new();
+		LicenseManager_12noon.LicenseManager manager = new();
 
 		// Create keypair -- error no passphrase
 		Assert.ThrowsException<ArgumentException>(() => manager.CreateKeypair());
@@ -58,7 +59,7 @@ public class CreateLicenseTest
 	[TestMethod]
 	public void TestCreateAndLoadKeypairDefaults()
 	{
-		Shared.LicenseManager manager = new();
+		LicenseManager_12noon.LicenseManager manager = new();
 
 		const string PASSPHRASE = "Sadipscing vero tincidunt no minim enim aliquyam duo. Consetetur facer nonumy ut eleifend duo sit.";
 
@@ -84,7 +85,7 @@ public class CreateLicenseTest
 	[TestMethod]
 	public void TestCreateAndLoadKeypair()
 	{
-		Shared.LicenseManager manager = new();
+		LicenseManager_12noon.LicenseManager manager = new();
 
 		const string PASSPHRASE = "Sadipscing vero tincidunt no minim enim aliquyam duo. Consetetur facer nonumy ut eleifend duo sit.";
 		const string PRODUCT_ID = "** My Product ID **";
@@ -119,9 +120,9 @@ public class CreateLicenseTest
 	/// </summary>
 	/// <param name="passphrase">Passphrase to use for the license manager</param>
 	/// <returns>New instance of the license manager</returns>
-	private Shared.LicenseManager CreateLicenseManager(string passphrase)
+	private LicenseManager_12noon.LicenseManager CreateLicenseManager(string passphrase)
 	{
-		Shared.LicenseManager manager = new();
+		LicenseManager_12noon.LicenseManager manager = new();
 
 		// Initialize a valid LicenseManager instance
 		// Assert that creating a license file does not throw an exception.
@@ -201,7 +202,7 @@ public class CreateLicenseTest
 	public void TestCreateLicenseBasic()
 	{
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("This is another random passphrase.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("This is another random passphrase.");
 
 		// Create license
 		manager.SaveLicenseFile(PathLicenseFile);
@@ -212,7 +213,7 @@ public class CreateLicenseTest
 	public void TestCreateLicenseAndValidateDefaults()
 	{
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("This is another random passphrase dolor lorem.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("This is another random passphrase dolor lorem.");
 
 		// Default value
 		Assert.AreEqual(LicenseType.Standard, manager.StandardOrTrial);
@@ -240,10 +241,11 @@ public class CreateLicenseTest
 
 		string publicKey = manager.KeyPublic;
 
-		/// Validate license
+		// Validate license
 		manager = new();
 
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
+		Assert.IsTrue(isValid);
 		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 
 		Assert.AreEqual(LICENSE_TYPE, manager.StandardOrTrial);
@@ -260,7 +262,7 @@ public class CreateLicenseTest
 	public void TestCreateLicenseAndValidate()
 	{
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("This is another random passphrase dolor lorem ipsum.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("This is another random passphrase dolor lorem ipsum.");
 
 		// Default value
 		Assert.AreEqual(LicenseType.Standard, manager.StandardOrTrial);
@@ -295,11 +297,12 @@ public class CreateLicenseTest
 
 		string publicKey = manager.KeyPublic;
 
-		/// Validate license
+		// Validate license
 		manager = new();
 
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
 		Assert.AreEqual(LICENSE_TYPE, manager.StandardOrTrial);
 		Assert.AreEqual(PRODUCT_ID, manager.ProductId);
@@ -317,7 +320,7 @@ public class CreateLicenseTest
 	public void TestMismatchedProductId()
 	{
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Ut exerci ad nonummy at amet elitr facilisis ipsum dolor iusto et takimata ut iriure. Elit eos ut accusam amet justo.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Ut exerci ad nonummy at amet elitr facilisis ipsum dolor iusto et takimata ut iriure. Elit eos ut accusam amet justo.");
 
 		const string PRODUCT_ID = "Badger Product ID";
 
@@ -329,15 +332,17 @@ public class CreateLicenseTest
 
 		string publicKey = manager.KeyPublic;
 
-		/// Validate license
+		// Validate license
 		manager = new();
 
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
+		Assert.IsTrue(isValid);
 		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 
 		Assert.AreEqual(PRODUCT_ID, manager.ProductId);
 
-		errorMessages = manager.IsThisLicenseValid("WRONG PRODUCT ID", publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		isValid = manager.IsThisLicenseValid("WRONG PRODUCT ID", publicKey, PathLicenseFile, pathAssembly: string.Empty, out errorMessages);
+		Assert.IsFalse(isValid);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
 	}
 
@@ -352,7 +357,7 @@ public class CreateLicenseTest
 		File.WriteAllText(pathAssemblyFileBad, @"Nonumy consectetuer et justo veniam. At stet est.");
 
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Sit dolor facilisi dolore amet autem. Amet stet sadipscing autem diam hendrerit.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Sit dolor facilisi dolore amet autem. Amet stet sadipscing autem diam hendrerit.");
 
 		const string PRODUCT_ID = "Gazelle Product ID";
 
@@ -369,10 +374,12 @@ public class CreateLicenseTest
 		/// Validate license
 		manager = new();
 
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssemblyFileGood);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssemblyFileGood, out string errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
-		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssemblyFileBad);
+		isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssemblyFileBad, out errorMessages);
+		Assert.IsFalse(isValid);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
 
 	}
@@ -384,7 +391,7 @@ public class CreateLicenseTest
 		Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("es-ES");
 
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Et sed esse et diam facilisi rebum ipsum adipiscing diam.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Et sed esse et diam facilisi rebum ipsum adipiscing diam.");
 
 		// Default value
 		Assert.AreEqual(LicenseType.Standard, manager.StandardOrTrial);
@@ -422,9 +429,10 @@ public class CreateLicenseTest
 		/// Validate license
 		manager = new();
 
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
 		Debug.WriteLineIf(!string.IsNullOrEmpty(errorMessages), errorMessages);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
 		Assert.AreEqual(LICENSE_TYPE, manager.StandardOrTrial);
 		Assert.AreEqual(PRODUCT_ID, manager.ProductId);
@@ -443,7 +451,7 @@ public class CreateLicenseTest
 	{
 		/// Arrange
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Ut exerci ad nonummy at amet elitr facilisis ipsum dolor iusto et takimata ut iriure. Elit eos ut accusam amet justo.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Ut exerci ad nonummy at amet elitr facilisis ipsum dolor iusto et takimata ut iriure. Elit eos ut accusam amet justo.");
 
 		const string PRODUCT_ID = "Badger Product ID";
 
@@ -463,7 +471,8 @@ public class CreateLicenseTest
 		/// Assert
 		/// Validate license
 		manager = new();
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
+		Assert.IsTrue(isValid);
 		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
 	}
 
@@ -472,7 +481,7 @@ public class CreateLicenseTest
 	{
 		/// Arrange
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Dolor amet eirmod erat esse minim ut iriure sit aliquyam ipsum ad.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Dolor amet eirmod erat esse minim ut iriure sit aliquyam ipsum ad.");
 
 		const string PRODUCT_ID = "Badger Product ID";
 
@@ -492,8 +501,9 @@ public class CreateLicenseTest
 		/// Assert
 		/// Validate license
 		manager = new();
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 	}
 
 	[TestMethod]
@@ -501,7 +511,7 @@ public class CreateLicenseTest
 	{
 		/// Arrange
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Hendrerit nihil et aliquyam amet tempor lorem sed.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Hendrerit nihil et aliquyam amet tempor lorem sed.");
 
 		const string PRODUCT_ID = "Badger Product ID";
 
@@ -522,7 +532,7 @@ public class CreateLicenseTest
 	{
 		/// Arrange
 		// Create keypair
-		Shared.LicenseManager manager = CreateLicenseManager("Rebum vel ipsum magna labore amet elitr dolor ea.");
+		LicenseManager_12noon.LicenseManager manager = CreateLicenseManager("Rebum vel ipsum magna labore amet elitr dolor ea.");
 
 		const string PRODUCT_ID = "Badger Product ID";
 
@@ -541,39 +551,45 @@ public class CreateLicenseTest
 
 		/// Assert
 		/// Validate license in 23:59:59 (NOT EXPIRED)
-		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1).AddMinutes(-1);
+		MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1).AddMinutes(-1);
 		manager = new();
-		string errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		bool isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out string errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
 		/// Validate license in 1 day (NOT EXPIRED)
-		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1);
+		MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1);
 		manager = new();
-		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
 		/// Validate license in 23:59:59 (NOT EXPIRED)
-		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1).AddMinutes(1);
+		MyNow.UtcNow = () => DateTime.UtcNow.AddDays(1).AddMinutes(1);
 		manager = new();
-		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
 		/// Validate license in 47:59:59 (NOT EXPIRED)
-		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(2).AddMinutes(-1);
+		MyNow.UtcNow = () => DateTime.UtcNow.AddDays(2).AddMinutes(-1);
 		manager = new();
-		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
-		Assert.IsTrue(string.IsNullOrEmpty(errorMessages));
+		isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out errorMessages);
+		Assert.IsTrue(isValid);
+		Assert.IsFalse(string.IsNullOrEmpty(errorMessages), "Some properties have changed from the default.");
 
 		/// Validate license in 2 days (EXPIRED)
-		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(2);
+		MyNow.UtcNow = () => DateTime.UtcNow.AddDays(2);
 		manager = new();
-		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out errorMessages);
+		Assert.IsFalse(isValid);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
 
 		/// Validate license in 3 days (EXPIRED)
-		Shared.MyNow.UtcNow = () => DateTime.UtcNow.AddDays(3);
+		MyNow.UtcNow = () => DateTime.UtcNow.AddDays(3);
 		manager = new();
-		errorMessages = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty);
+		isValid = manager.IsThisLicenseValid(PRODUCT_ID, publicKey, PathLicenseFile, pathAssembly: string.Empty, out errorMessages);
+		Assert.IsFalse(isValid);
 		Assert.IsFalse(string.IsNullOrEmpty(errorMessages));
 	}
 
@@ -582,7 +598,7 @@ public class CreateLicenseTest
 	{
 		/// Arrange
 		// Create a keypair
-		Shared.LicenseManager manager = new();
+		LicenseManager_12noon.LicenseManager manager = new();
 		const string PASSPHRASE = "Test passphrase";
 		manager.Passphrase = PASSPHRASE;
 		manager.CreateKeypair();

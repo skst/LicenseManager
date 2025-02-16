@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LicenseManager_12noon.Client;
+using System;
 using System.Windows;
 using System.Windows.Data;
 

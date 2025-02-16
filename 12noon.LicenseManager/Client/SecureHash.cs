@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Shared;
+namespace LicenseManager_12noon.Client;
 
 public static class SecureHash
 {
@@ -81,7 +81,7 @@ public static class SecureHash
 	/// </example>
 	/// <param name="inBytes">Array of bytes to join</param>
 	/// <returns>String consisting of appended bytes</returns>
-	public static string JoinBytes(byte[] inBytes)
+	private static string JoinBytes(byte[] inBytes)
 	{
 		StringBuilder stringBuilder = new();
 		foreach (byte b in inBytes)
