@@ -96,6 +96,11 @@ prompt you for where to save the `.lic` file.
 
 ### The Licensed Application
 
+The licensed application must use the `LicenseManager` class to validate the license.
+This means that it will also need to include the following NuGet packages:
+* Standard.Licensing
+* CommunityToolkit.Mvvm
+
 The licensed application must pass the `Product ID` and the `Public Key` to the license validation API.
 
 ```
