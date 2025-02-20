@@ -68,6 +68,7 @@ public partial class LicenseManager : ObservableObject
 
 	private const string ELEMENT_NAME_LICENSE = "license";
 	private const string ELEMENT_NAME_STANDARD_OR_TRIAL = "standard-or-trial";
+	private const string ELEMENT_NAME_EXPIRATION_DATE = "expiration-date";
 	private const string ELEMENT_NAME_EXPIRATION_DAYS = "expiration-days";
 	private const string ELEMENT_NAME_QUANTITY = "quantity";
 
@@ -86,9 +87,13 @@ public partial class LicenseManager : ObservableObject
 	[ObservableProperty]
 	private LicenseType _standardOrTrial = LicenseType.Standard;
 	[ObservableProperty]
-	private DateTime _expirationDate = DateTime.MaxValue;
+	private DateTime _expirationDate = DateTime.MaxValue.Date;
 	[ObservableProperty]
 	private int _expirationDays;
+	partial void OnExpirationDaysChanged(int value)
+	{
+		ExpirationDate = MyNow.UtcNow().Date.AddDays(value);
+	}
 	[ObservableProperty]
 	private int _quantity = 1;
 
@@ -223,8 +228,11 @@ public partial class LicenseManager : ObservableObject
 
 		XElement license = root.Element(ELEMENT_NAME_LICENSE)!;
 		StandardOrTrial = Enum.Parse<LicenseType>(license.Element(ELEMENT_NAME_STANDARD_OR_TRIAL)!.Value);
-		ExpirationDays = int.Parse(license.Element(ELEMENT_NAME_EXPIRATION_DAYS)!.Value);
-		Quantity = int.Parse(license.Element(ELEMENT_NAME_QUANTITY)!.Value);
+
+		ExpirationDate = DateTime.Parse(license.Element(ELEMENT_NAME_EXPIRATION_DATE)!.Value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+		//ExpirationDays = Convert.ToInt32(license.Element(ELEMENT_NAME_EXPIRATION_DAYS)!.Value);
+		ExpirationDays = (ExpirationDate == DateTime.MaxValue.Date) ? 0 : (ExpirationDate - MyNow.UtcNow().Date).Days;
+		Quantity = Convert.ToInt32(license.Element(ELEMENT_NAME_QUANTITY)!.Value);
 		PathAssembly = root.Element(ELEMENT_NAME_PATHASSEMBLY)!.Value;
 		IsLockedToAssembly = !string.IsNullOrEmpty(PathAssembly);
 
@@ -278,6 +286,7 @@ public partial class LicenseManager : ObservableObject
 			Company = customer.Element("Company")?.Value ?? string.Empty;
 
 			ExpirationDays = Convert.ToInt32(GetNestedValue(root, "Attribute", "Expiration Days"));
+			//ExpirationDate is a dependent property and automatically updated.
 
 			SaveKeypair(pathKeypair);
 		}
@@ -331,6 +340,7 @@ public partial class LicenseManager : ObservableObject
 				)
 				, new XElement(ELEMENT_NAME_LICENSE
 					, new XElement(ELEMENT_NAME_STANDARD_OR_TRIAL, StandardOrTrial)
+					, new XElement(ELEMENT_NAME_EXPIRATION_DATE, ExpirationDate.ToString(CultureInfo.InvariantCulture))
 					, new XElement(ELEMENT_NAME_EXPIRATION_DAYS, ExpirationDays)
 					, new XElement(ELEMENT_NAME_QUANTITY, Quantity)
 				)
@@ -409,7 +419,7 @@ public partial class LicenseManager : ObservableObject
 		if (ExpirationDays > 0)
 		{
 			// ExpiresAt() converts passed date/time to UTC.
-			licenseBuilder.ExpiresAt(MyNow.Now().AddDays(ExpirationDays));
+			licenseBuilder.ExpiresAt(MyNow.Now().Date.AddDays(ExpirationDays));
 		}
 		licenseBuilder
 			.WithMaximumUtilization(Quantity)
@@ -503,7 +513,7 @@ public partial class LicenseManager : ObservableObject
 				}
 				if (PublishDate.HasValue && (PublishDate != _licenseFile.PublishDate))
 				{
-					differences.Add($"Publish date: Current = {PublishDate}, New = {_licenseFile.PublishDate}");
+					differences.Add($"Publish date: Current = {PublishDate:D}, New = {_licenseFile.PublishDate:D}");
 				}
 				if (StandardOrTrial != _licenseFile.StandardOrTrial)
 				{
@@ -511,7 +521,10 @@ public partial class LicenseManager : ObservableObject
 				}
 				if (ExpirationDate != _licenseFile.ExpirationDate)
 				{
-					differences.Add($"Expiration date: Current = {((ExpirationDate == DateTime.MaxValue) ? "None" : ExpirationDate):D}, New = {((_licenseFile.ExpirationDate == DateTime.MaxValue) ? "None" : _licenseFile.ExpirationDate):D}");
+					differences.Add($"Expiration date: " +
+						$"Current = {((ExpirationDate == DateTime.MaxValue.Date) ? "None" : ExpirationDate):D}, " +
+						$"New = {((_licenseFile.ExpirationDate == DateTime.MaxValue.Date) ? "None" : _licenseFile.ExpirationDate):D}"
+					);
 				}
 				if (ExpirationDays != _licenseFile.ExpirationDays)
 				{

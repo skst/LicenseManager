@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>LicenseManager_12noon</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>12noon License Manager Client</Title>
+    <Description>License Manager is a graphical front-end application designed to create and manage licenses for software applications. It leverages the Standard.Licensing project to handle license generation and validation. This project ensures that software licenses are securely generated and validated, providing a robust mechanism for software protection.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>lock.png</PackageIcon>
+    <PackageProjectUrl>https://12noon.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/skst/LicenseManager</RepositoryUrl>
+    <PackageTags>license manager;license;licensing;lock;secure;security;sign;enterprise;version;publish;distribute;standard.licensing</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>LicenseManager_12noon.Client</PackageId>
+    <Authors>$(Company)</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LicenseManager_12noon\lock.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+   <ItemGroup>
+    <PackageReference Include="Standard.Licensing" Version="1.2.1" />
+  </ItemGroup>
+
+</Project>

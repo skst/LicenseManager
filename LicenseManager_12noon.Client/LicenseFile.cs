@@ -47,7 +47,7 @@ public partial class LicenseFile
 	 * These properties are set when a license has been validated.
 	 */
 	public LicenseType StandardOrTrial = LicenseType.Standard;
-	public DateTime ExpirationDate = DateTime.MaxValue;
+	public DateTime ExpirationDate = DateTime.MaxValue.Date;
 	public int ExpirationDays;
 	public int Quantity = 1;
 
@@ -123,7 +123,7 @@ public partial class LicenseFile
 		PublishDate = null;
 
 		StandardOrTrial = LicenseType.Trial;
-		ExpirationDate = DateTime.MaxValue;
+		ExpirationDate = DateTime.MaxValue.Date;
 		ExpirationDays = 0;
 		Quantity = 1;
 
@@ -224,12 +224,12 @@ public partial class LicenseFile
 			}
 
 			StandardOrTrial = license.Type;
-			/// Get the number of days REMAINING until expiration.
+			// If the expiration date is set, get the number of days REMAINING until expiry.
 			if (license.Expiration.Date != DateTime.MaxValue.Date)
 			{
-				// Expiration property is UTC.
+				// Expiration property is local.
 				ExpirationDate = license.Expiration.Date;
-				ExpirationDays = Convert.ToInt32(license.Expiration.Subtract(DateTime.UtcNow).TotalDays);
+				ExpirationDays = Convert.ToInt32(ExpirationDate.Subtract(MyNow.Now().Date).TotalDays);
 			}
 			/// This is the number of days until expiration ORIGINALLY specified.
 			//if (!string.IsNullOrEmpty(expirationDays))

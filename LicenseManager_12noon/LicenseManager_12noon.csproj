@@ -10,7 +10,6 @@
     <Platforms>x64</Platforms>
     <PackageIcon />
     <ApplicationIcon>lock.ico</ApplicationIcon>
-    <Company>12noon LLC</Company>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +23,10 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Standard.Licensing" Version="1.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LicenseManager_12noon.Client\LicenseManager_12noon.Client.csproj" />
   </ItemGroup>
 
 

@@ -1,15 +1,10 @@
 <Project>
-<!--
-	https://aka.ms/dotnet/msbuild/customize
-	https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build
-	https://stackoverflow.com/questions/45575280/msbuild-nuget-restoreoutputpath-how-to-make-it-work
--->
 	<PropertyGroup>
 		<Company>12noon LLC</Company>
 		<Copyright>(c) 2024-2025 12noon LLC</Copyright>
-		<Product>License Manager</Product>
 		<VersionPrefix>1.2.7</VersionPrefix>
 		<FileVersion>1.2.7.0</FileVersion>
 		<AssemblyVersion>1.2.7</AssemblyVersion>
+		<Product>12noon License Manager</Product>
 	</PropertyGroup>
 </Project>

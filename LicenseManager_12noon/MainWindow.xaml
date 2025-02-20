@@ -179,6 +179,7 @@
 				<Button		Grid.Row="5" Grid.Column="3" Style="{StaticResource StyleButton}" Content="Browse..." IsEnabled="{Binding IsChecked, ElementName=CtlLockedAssembly}" Click="SelectAssemblyButton_Click" />
 			</Grid>
 		</Border>
+
 		<!-- PRODUCT -->
 		<Border Grid.Row="3" Grid.Column="1" Margin="5" BorderBrush="Black" BorderThickness="2">
 			<Grid>

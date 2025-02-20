@@ -10,11 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="Standard.Licensing" Version="1.2.1" />
+    <PackageReference Include="LicenseManagerClient.12noon" Version="1.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\12noon.LicenseManager\LicenseManager_12noon.csproj" />
+    <ProjectReference Include="..\LicenseManager_12noon\LicenseManager_12noon.csproj" />
   </ItemGroup>
 
   <ItemGroup>

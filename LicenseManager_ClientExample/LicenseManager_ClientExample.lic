@@ -1,0 +1,22 @@
+﻿<License>
+  <Id>2e5a9c06-6b9b-4a35-9c82-967465d0e578</Id>
+  <Type>Trial</Type>
+  <Expiration>Tue, 16 Nov 2027 06:00:00 GMT</Expiration>
+  <Quantity>5</Quantity>
+  <ProductFeatures>
+    <Feature name="Product">My Sample App</Feature>
+    <Feature name="Version">1.2.34</Feature>
+    <Feature name="Publish Date">02/15/2025</Feature>
+  </ProductFeatures>
+  <Customer>
+    <Name>Jane Smith</Name>
+    <Email>jsmith@buyer.com</Email>
+    <Company>Buyer Corporation</Company>
+  </Customer>
+  <LicenseAttributes>
+    <Attribute name="Product Identity">dbf5c9654dc1061f2cf58c63159d1111c6fa1932627835c02bc40046559dab80</Attribute>
+    <Attribute name="Assembly Identity"></Attribute>
+    <Attribute name="Expiration Days">1000</Attribute>
+  </LicenseAttributes>
+  <Signature>MEYCIQDT5c8utUzCqMeNiMaPhO30NSjSK9+dOOGfT4Lc1/ywoAIhAJGblMWChmEuxRkQX45CyM5uB5ZU262AqY64BBqUtgys</Signature>
+</License>

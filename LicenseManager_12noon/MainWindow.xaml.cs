@@ -108,7 +108,7 @@ public partial class MainWindow : Window
 			DefaultDirectory = PathDefaultFolder,
 			AddToRecent = false,
 			Multiselect = false,
-			Filter = "Assembly Files|*.exe;*.dll",
+			Filter = "Assembly Files|*.exe;*.dll|All Files|*.*",
 			DefaultExt = @".exe",
 			FileName = currentPath,
 		};
@@ -273,7 +273,7 @@ All Files|*.*
 			Title = "Save Keypair File",
 			DefaultDirectory = PathDefaultFolder,
 			AddToRecent = false,
-			Filter = $"Keypair Files|*{LicenseManager.FileExtension_PrivateKey}",
+			Filter = $"Keypair Files|*{LicenseManager.FileExtension_PrivateKey}|All Files|*.*",
 			DefaultExt = LicenseManager.FileExtension_PrivateKey,
 			FileName = PathKeypair,
 		};
@@ -303,7 +303,7 @@ All Files|*.*
 			Title = "Save License File",
 			DefaultDirectory = PathDefaultFolder,
 			AddToRecent = false,
-			Filter = $"License Files|*{LicenseManager.FileExtension_License}",
+			Filter = $"License Files|*{LicenseManager.FileExtension_License}|All Files|*.*",
 			DefaultExt = LicenseManager.FileExtension_License,
 			FileName = PathLicense,
 		};

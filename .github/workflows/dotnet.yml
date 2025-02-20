@@ -31,7 +31,7 @@ on:
       - 'LICENSE'
 
 env:
-  # Path to the solution file relative to the root of the project.
+  # Path to the project files relative to the root of the project.
   SOLUTION_FILE_PATH: 12noon.LicenseManager/LicenseManager_12noon.csproj
   SOLUTION_TESTS_FILE_PATH: 12noon.LicenseManager.UnitTests/LicenseManager_12noon.UnitTests.csproj
 

@@ -8,9 +8,17 @@ This is a graphical front-end for the [Standard.Licensing](https://github.com/ju
 
 ![License Manager](https://raw.githubusercontent.com/skst/LicenseManager/master/12noon.LicenseManager.png)
 
+## Description
+
+**License Manager** is a graphical front-end application designed to create and manage
+licenses for software applications using .NET.
+It leverages the **Standard.Licensing** project to handle license generation and validation.
+
+This project ensures that software licenses are securely generated and validated, providing a robust mechanism for software protection.
+
 ## Features
 
-### Keys
+### Key Management
 
 | Property | Usage |
 |----------|-------|
@@ -28,7 +36,7 @@ The application maintains the private key in the `.private` file but does not di
 |----------|-------|
 | Name | The product name |
 | Version | The product version |
-| Date published | The date of publishing |
+| Date published | The date the product was published |
 
 These values can be displayed by the licensed application.
 
@@ -39,7 +47,8 @@ The publish date can represent any date you want.
 | Property | Usage |
 |----------|-------|
 | Type | Standard or trial license |
-| Expiration | The number of days in which the license expires. Zero means no expiry. |
+| Expiration Date | The date on which the license expires. `DateTime.MaxDate.Date` means no expiry. |
+| Expiration | The number of days until the license expires. Zero means no expiry. |
 | Quantity | Minimum value is one (1) |
 
 The licensed application can check the type to permit only certain features.
@@ -96,26 +105,15 @@ prompt you for where to save the `.lic` file.
 
 ### The Licensed Application
 
-You can use the `Standard.Licensing` NuGet package to validate the license in your application.
+Install the `LicenseManager_12noon.Client` NuGet package in your application.
 
-Alternatively, you can use the `LicenseFile` class in this project to validate the license.
-This means that it will also need to include the following NuGet packages:
-
-* `Standard.Licensing`
-
-You will also need to copy the following files from this project:
-
-* `LicenseFile.cs`
-* `SecureHash.cs`
-* `MyNow.cs`
-
-___Note: I am working on publishing a NuGet package for clients. (Hopefully, in Feb 2025.)___
-
-The licensed application must pass the `Product ID` and the `Public Key` to the license validation API.
+The licensed application must pass the **Product ID** and the **Public Key** to the license validation API.
 
 ```
+const string PRODUCT_ID = "My Product ID";	// Copied from the License Manager application
+const string PUBLIC_KEY = "The Public Key";	// Copied from the License Manager application
 LicenseFile license = new();
-bool isValid = license.IsLicenseValid(productID: "My Product ID", publicKey: "The Public Key", out string messages);
+bool isValid = license.IsLicenseValid(PRODUCT_ID, PUBLIC_KEY, out string messages);
 if (!isValid)
 {
 	// INVALID
@@ -132,7 +130,9 @@ if (license.StandardOrTrial == LicenseType.Trial)
 
 If the license is valid, you can use any of the properties (_e.g._, for display or to limit features).
 
-Note: Of course, the hash of _Product ID_ and _Public Key_ will not prevent a determined
+Alternatively, you can use the `Standard.Licensing` NuGet package to validate the license in your application.
+
+**Note:** Of course, the hash of _Product ID_ and _Public Key_ will not prevent a determined
 hacker from working around the license. However, it will prevent a simple text substitution
 of the public key.
 
