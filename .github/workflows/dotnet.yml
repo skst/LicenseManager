@@ -32,16 +32,18 @@ on:
 
 env:
   # Path to the project files relative to the root of the project.
-  SOLUTION_FILE_PATH: 12noon.LicenseManager/LicenseManager_12noon.csproj
-  SOLUTION_TESTS_FILE_PATH: 12noon.LicenseManager.UnitTests/LicenseManager_12noon.UnitTests.csproj
+  PROJECT_CLIENT_FILE_PATH: LicenseManager_12noon.Client/LicenseManager_12noon.Client.csproj
+  PROJECT_APP_FILE_PATH: LicenseManager_12noon/LicenseManager_12noon.csproj
+  PROJECT_EXAMPLE_FILE_PATH: LicenseManager_ClientExample/LicenseManager_ClientExample.csproj
+  PROJECT_TESTS_FILE_PATH: LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
   # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
   BUILD_CONFIGURATION: Release
 
-  ARTIFACT_NAME: 12noon.LicenseManager
-  ARTIFACT_PACKAGE: package-12noon.licensemanager
+  ARTIFACT_NAME: LicenseManager_12noon
+  ARTIFACT_PACKAGE: package-licensemanager_12noon
 
 concurrency:
   group: licensemanager-${{ github.ref }}-1
@@ -73,18 +75,27 @@ jobs:
 
       # https://docs.microsoft.com/en-us/dotnet/core/tools/
       - name: Build
-        run: dotnet build ${{env.SOLUTION_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+        run: |
+          # => .\artifacts\package\release\LicenseManager_12noon.Client.1.3.1.nupkg
+          dotnet build ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+          dotnet build ${{env.PROJECT_APP_FILE_PATH}}     --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+          dotnet build ${{env.PROJECT_EXAMPLE_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
 
       # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
       # verbosity detailed
       - name: Test
-        run: dotnet test ${{env.SOLUTION_TESTS_FILE_PATH}} --nologo --verbosity normal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
+        run: dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo --verbosity normal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
 
-      - name: Build single-file deployment
-        # Publish to sibling `release` folder for github-tag-action step.
-        run: dotnet publish ${{env.SOLUTION_FILE_PATH}} --property:PublishProfile=FolderProfile --output ./release/
+      # Publish to sibling `release` folder for github-tag-action step.
+      - name: Publish targets in `release` folder
+        run: |
+          # pack => LicenseManager_12noon.Client.1.2.3.nupkg
+          dotnet pack    ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --no-restore --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --output ./release/
+          # Build single-file deployment
+          dotnet publish ${{env.PROJECT_APP_FILE_PATH}}     --property:PublishProfile=FolderProfile --output ./release/
+          dotnet publish ${{env.PROJECT_EXAMPLE_FILE_PATH}} --property:PublishProfile=FolderProfile --output ./release/
 
-      - name: Copy Files to Publish
+      - name: Copy extra files to publish
         run: Copy-Item -Path LICENSE -Destination ./release/
 
       # Upload release artifact to share with next job
@@ -182,6 +193,10 @@ jobs:
         run: |
           ls -la
           ls -la ./release/
+
+      # https://learn.microsoft.com/en-us/nuget/nuget-org/publish-a-package
+      - name: Publish NuGet
+        run: dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json
 
       # https://github.com/marketplace/actions/github-tag-bump
       - name: Bump version and push tag
