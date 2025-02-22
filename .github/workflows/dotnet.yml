@@ -196,7 +196,7 @@ jobs:
 
       # https://learn.microsoft.com/en-us/nuget/nuget-org/publish-a-package
       - name: Publish NuGet
-        run: dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       # https://github.com/marketplace/actions/github-tag-bump
       - name: Bump version and push tag
