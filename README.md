@@ -6,7 +6,9 @@
 
 This is a graphical front-end for the [Standard.Licensing](https://github.com/junian/Standard.Licensing) project.
 
-![License Manager](https://raw.githubusercontent.com/skst/LicenseManager/master/12noon.LicenseManager.png)
+It also includes a client library with an improved API to validate licenses in your application.
+
+![License Manager](https://raw.githubusercontent.com/skst/LicenseManager/master/LicenseManager_12noon.png)
 
 ## Description
 
@@ -15,6 +17,15 @@ licenses for software applications using .NET.
 It leverages the **Standard.Licensing** project to handle license generation and validation.
 
 This project ensures that software licenses are securely generated and validated, providing a robust mechanism for software protection.
+
+You can download the License Manager application from the Microsoft Store, and it will be updated automatically.
+
+<a href="https://apps.microsoft.com/store/detail/9PFBGG44SHLM?launch=true&mode=full">
+	<img width="300" src="https://get.microsoft.com/images/en-us%20dark.svg"/>
+</a>
+
+Alternatively, you can download the latest release from the
+[Releases](https://github.com/skst/LicenseManager/releases/latest) page.
 
 ## Features
 
@@ -142,3 +153,8 @@ and storing a hash of it and the public key in protected storage.
 Then the application could use the hash as the _Product ID_.
 Of course, the licensee would have to keep that text as secret as they
 should keep the license file.
+
+### Example Client Application
+
+The project includes an example client application that demonstrates how to use
+the client NuGet library to validate a license and access the license's information.

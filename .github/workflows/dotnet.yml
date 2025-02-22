@@ -1,4 +1,4 @@
-name: .NET
+name: Build and Publish License Manager
 
 #
 # Skip the workflow with one of the following:
@@ -32,10 +32,10 @@ on:
 
 env:
   # Path to the project files relative to the root of the project.
-  PROJECT_CLIENT_FILE_PATH: LicenseManager_12noon.Client/LicenseManager_12noon.Client.csproj
-  PROJECT_APP_FILE_PATH: LicenseManager_12noon/LicenseManager_12noon.csproj
+  PROJECT_CLIENT_FILE_PATH:  LicenseManager_12noon.Client/LicenseManager_12noon.Client.csproj
+  PROJECT_APP_FILE_PATH:     LicenseManager_12noon/LicenseManager_12noon.csproj
   PROJECT_EXAMPLE_FILE_PATH: LicenseManager_ClientExample/LicenseManager_ClientExample.csproj
-  PROJECT_TESTS_FILE_PATH: LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
+  PROJECT_TESTS_FILE_PATH:   LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
@@ -195,15 +195,19 @@ jobs:
           ls -la ./release/
 
       # https://learn.microsoft.com/en-us/nuget/nuget-org/publish-a-package
-      - name: Publish NuGet
-        run: dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Publish NuGet package to NuGet.org and GitHub Packages
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: |
+          dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push ./release/*.nupkg --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/skst/index.json --skip-duplicate
 
       # https://github.com/marketplace/actions/github-tag-bump
       - name: Bump version and push tag
         id: StepBump
         uses: anothrNick/github-tag-action@1.71.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           DEFAULT_BUMP: none
           WITH_V: true
 
@@ -222,9 +226,11 @@ jobs:
         if: success() && needs.version.outputs.TagNoV && steps.StepBump.outputs.new_tag
         uses: ncipollo/release-action@v1.16.0
         with:
+          allowUpdates: false
+          generateReleaseNotes: true
           name: ${{ needs.version.outputs.TagNoV }}
           tag: ${{ steps.StepBump.outputs.new_tag }}
           #body: ???
           # Note: Using "./release/*" uploads the individual files.
           artifacts: ${{env.ARTIFACT_NAME}}.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{secrets.GITHUB_TOKEN}}
