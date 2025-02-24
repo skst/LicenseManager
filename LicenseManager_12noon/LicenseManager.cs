@@ -87,12 +87,12 @@ public partial class LicenseManager : ObservableObject
 	[ObservableProperty]
 	private LicenseType _standardOrTrial = LicenseType.Standard;
 	[ObservableProperty]
-	private DateTime _expirationDate = DateTime.MaxValue.Date;
+	private DateTime _expirationDateUTC = DateTime.MaxValue.Date;
 	[ObservableProperty]
 	private int _expirationDays;
 	partial void OnExpirationDaysChanged(int value)
 	{
-		ExpirationDate = MyNow.UtcNow().Date.AddDays(value);
+		ExpirationDateUTC = MyNow.UtcNow().Date.AddDays(value);
 	}
 	[ObservableProperty]
 	private int _quantity = 1;
@@ -229,9 +229,11 @@ public partial class LicenseManager : ObservableObject
 		XElement license = root.Element(ELEMENT_NAME_LICENSE)!;
 		StandardOrTrial = Enum.Parse<LicenseType>(license.Element(ELEMENT_NAME_STANDARD_OR_TRIAL)!.Value);
 
-		ExpirationDate = DateTime.Parse(license.Element(ELEMENT_NAME_EXPIRATION_DATE)!.Value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+		ExpirationDateUTC = DateTime.Parse(license.Element(ELEMENT_NAME_EXPIRATION_DATE)!.Value,
+														CultureInfo.InvariantCulture,
+														DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
 		//ExpirationDays = Convert.ToInt32(license.Element(ELEMENT_NAME_EXPIRATION_DAYS)!.Value);
-		ExpirationDays = (ExpirationDate == DateTime.MaxValue.Date) ? 0 : (ExpirationDate - MyNow.UtcNow().Date).Days;
+		ExpirationDays = (ExpirationDateUTC == DateTime.MaxValue.Date) ? 0 : (ExpirationDateUTC - MyNow.UtcNow().Date).Days;
 		Quantity = Convert.ToInt32(license.Element(ELEMENT_NAME_QUANTITY)!.Value);
 		PathAssembly = root.Element(ELEMENT_NAME_PATHASSEMBLY)!.Value;
 		IsLockedToAssembly = !string.IsNullOrEmpty(PathAssembly);
@@ -286,7 +288,7 @@ public partial class LicenseManager : ObservableObject
 			Company = customer.Element("Company")?.Value ?? string.Empty;
 
 			ExpirationDays = Convert.ToInt32(GetNestedValue(root, "Attribute", "Expiration Days"));
-			//ExpirationDate is a dependent property and automatically updated.
+			//ExpirationDateUTC is a dependent property and automatically updated.
 
 			SaveKeypair(pathKeypair);
 		}
@@ -340,7 +342,7 @@ public partial class LicenseManager : ObservableObject
 				)
 				, new XElement(ELEMENT_NAME_LICENSE
 					, new XElement(ELEMENT_NAME_STANDARD_OR_TRIAL, StandardOrTrial)
-					, new XElement(ELEMENT_NAME_EXPIRATION_DATE, ExpirationDate.ToString(CultureInfo.InvariantCulture))
+					, new XElement(ELEMENT_NAME_EXPIRATION_DATE, ExpirationDateUTC.ToString(CultureInfo.InvariantCulture))
 					, new XElement(ELEMENT_NAME_EXPIRATION_DAYS, ExpirationDays)
 					, new XElement(ELEMENT_NAME_QUANTITY, Quantity)
 				)
@@ -418,7 +420,7 @@ public partial class LicenseManager : ObservableObject
 			.As(StandardOrTrial);
 		if (ExpirationDays > 0)
 		{
-			// ExpiresAt() converts passed date/time to UTC.
+			// ExpiresAt() converts passed date/time to UTC and assigns to Expiration property.
 			licenseBuilder.ExpiresAt(MyNow.Now().Date.AddDays(ExpirationDays));
 		}
 		licenseBuilder
@@ -519,11 +521,11 @@ public partial class LicenseManager : ObservableObject
 				{
 					differences.Add($"Type: Current = {StandardOrTrial}, New = {_licenseFile.StandardOrTrial}");
 				}
-				if (ExpirationDate != _licenseFile.ExpirationDate)
+				if (ExpirationDateUTC != _licenseFile.ExpirationDateUTC)
 				{
 					differences.Add($"Expiration date: " +
-						$"Current = {((ExpirationDate == DateTime.MaxValue.Date) ? "None" : ExpirationDate):D}, " +
-						$"New = {((_licenseFile.ExpirationDate == DateTime.MaxValue.Date) ? "None" : _licenseFile.ExpirationDate):D}"
+						$"Current = {((ExpirationDateUTC == DateTime.MaxValue.Date) ? "None" : ExpirationDateUTC):D}, " +
+						$"New = {((_licenseFile.ExpirationDateUTC == DateTime.MaxValue.Date) ? "None" : _licenseFile.ExpirationDateUTC):D}"
 					);
 				}
 				if (ExpirationDays != _licenseFile.ExpirationDays)
@@ -563,7 +565,7 @@ public partial class LicenseManager : ObservableObject
 				PublishDate = _licenseFile.PublishDate;
 
 				StandardOrTrial = _licenseFile.StandardOrTrial;
-				ExpirationDate = _licenseFile.ExpirationDate;
+				ExpirationDateUTC = _licenseFile.ExpirationDateUTC;
 				ExpirationDays = _licenseFile.ExpirationDays;
 				Quantity = _licenseFile.Quantity;
 

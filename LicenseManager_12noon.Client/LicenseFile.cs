@@ -47,7 +47,7 @@ public partial class LicenseFile
 	 * These properties are set when a license has been validated.
 	 */
 	public LicenseType StandardOrTrial = LicenseType.Standard;
-	public DateTime ExpirationDate = DateTime.MaxValue.Date;
+	public DateTime ExpirationDateUTC = DateTime.MaxValue.Date;
 	public int ExpirationDays;
 	public int Quantity = 1;
 
@@ -123,7 +123,7 @@ public partial class LicenseFile
 		PublishDate = null;
 
 		StandardOrTrial = LicenseType.Trial;
-		ExpirationDate = DateTime.MaxValue.Date;
+		ExpirationDateUTC = DateTime.MaxValue.Date;
 		ExpirationDays = 0;
 		Quantity = 1;
 
@@ -180,13 +180,14 @@ public partial class LicenseFile
 			IEnumerable<IValidationFailure> loadErrors =
 				license
 					.Validate()
-					// Note: Default parameter is DateTime.Now. This is a bug because the Expiration property returns UTC.
-					// But (somehow), Expiration is Local by the time this comparison happens.
-					.ExpirationDate(MyNow.Now())
+					// ExpirationDate() compares Expiration property (which is UTC but Kind=Utc) with passed date/time.
+					.ExpirationDate(MyNow.UtcNow())
 					.When(lic => !string.IsNullOrEmpty(expirationDays))
 					// Only check the expiry WHEN the license is Trial.
 					// https://github.com/junian/Standard.Licensing/issues/21
 					//.When(lic => lic.Type == LicenseType.Trial)
+					.And()
+					.ProductBuildDate([ Assembly.GetExecutingAssembly() ])
 					.And()
 					.Signature(publicKey)
 					.AssertValidLicense()
@@ -227,9 +228,10 @@ public partial class LicenseFile
 			// If the expiration date is set, get the number of days REMAINING until expiry.
 			if (license.Expiration.Date != DateTime.MaxValue.Date)
 			{
-				// Expiration property is local.
-				ExpirationDate = license.Expiration.Date;
-				ExpirationDays = Convert.ToInt32(ExpirationDate.Subtract(MyNow.Now().Date).TotalDays);
+				// Expiration property is UTC.
+				ExpirationDateUTC = license.Expiration.Date;
+				ExpirationDateUTC = DateTime.SpecifyKind(ExpirationDateUTC, DateTimeKind.Utc);
+				ExpirationDays = Convert.ToInt32(ExpirationDateUTC.Subtract(MyNow.UtcNow().Date).TotalDays);
 			}
 			/// This is the number of days until expiration ORIGINALLY specified.
 			//if (!string.IsNullOrEmpty(expirationDays))
