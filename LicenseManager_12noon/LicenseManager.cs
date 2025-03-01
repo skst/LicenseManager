@@ -229,9 +229,11 @@ public partial class LicenseManager : ObservableObject
 		XElement license = root.Element(ELEMENT_NAME_LICENSE)!;
 		StandardOrTrial = Enum.Parse<LicenseType>(license.Element(ELEMENT_NAME_STANDARD_OR_TRIAL)!.Value);
 
-		ExpirationDateUTC = DateTime.Parse(license.Element(ELEMENT_NAME_EXPIRATION_DATE)!.Value,
-														CultureInfo.InvariantCulture,
-														DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+		XElement? eltExpirationDate = license.Element(ELEMENT_NAME_EXPIRATION_DATE);
+		ExpirationDateUTC = (eltExpirationDate is null)
+			? DateTime.MaxValue.Date
+			: DateTime.Parse(eltExpirationDate.Value, CultureInfo.InvariantCulture,
+									DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
 		//ExpirationDays = Convert.ToInt32(license.Element(ELEMENT_NAME_EXPIRATION_DAYS)!.Value);
 		ExpirationDays = (ExpirationDateUTC == DateTime.MaxValue.Date) ? 0 : (ExpirationDateUTC - MyNow.UtcNow().Date).Days;
 		Quantity = Convert.ToInt32(license.Element(ELEMENT_NAME_QUANTITY)!.Value);
@@ -421,7 +423,8 @@ public partial class LicenseManager : ObservableObject
 		if (ExpirationDays > 0)
 		{
 			// ExpiresAt() converts passed date/time to UTC and assigns to Expiration property.
-			licenseBuilder.ExpiresAt(MyNow.Now().Date.AddDays(ExpirationDays));
+			// If we do this with LocalTime, the expiration date will be off by the time zone offset.
+			licenseBuilder.ExpiresAt(MyNow.UtcNow().Date.AddDays(ExpirationDays));
 		}
 		licenseBuilder
 			.WithMaximumUtilization(Quantity)

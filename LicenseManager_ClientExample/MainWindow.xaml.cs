@@ -34,7 +34,7 @@ public partial class MainWindow : Window
 		if (App.IsLicensed)
 		{
 			LicenseType = App.License.StandardOrTrial.ToString();
-			ExpirationDate = App.License.ExpirationDate.ToString("D") ?? "None";
+			ExpirationDate = App.License.ExpirationDateUTC.ToString("D") ?? "None";
 			ExpirationDays = App.License.ExpirationDays;
 			Quantity = App.License.Quantity;
 			Product = App.License.Product;
