@@ -4,6 +4,9 @@
 [![build](https://github.com/skst/LicenseManager/actions/workflows/dotnet.yml/badge.svg)](https://github.com/skst/LicenseManager/actions/workflows/dotnet.yml)
 [![GitHub last commit](https://img.shields.io/github/last-commit/skst/LicenseManager)](https://github.com/skst/LicenseManager)
 
+[![NuGet Version](https://img.shields.io/nuget/v/LicenseManager_12noon.Client.svg?style=for-the-badge)](https://nuget.org/packages/LicenseManager_12noon.Client)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/LicenseManager_12noon.Client.svg?style=for-the-badge)](https://nuget.org/packages/LicenseManager_12noon.Client)
+
 This is a graphical front-end for the [Standard.Licensing](https://github.com/junian/Standard.Licensing) project.
 
 It also includes a client library with an improved API to validate licenses in your application.
