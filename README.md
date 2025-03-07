@@ -9,7 +9,15 @@
 
 This is a graphical front-end for the [Standard.Licensing](https://github.com/junian/Standard.Licensing) project.
 
-It also includes a client library with an improved API to validate licenses in your application.
+The optional [LicenseManager_12noon.Client NuGet package](https://nuget.org/packages/LicenseManager_12noon.Client)
+has an improved API to validate licenses in your application.
+
+> Note that the **LicenseManager_12noon.Client** NuGet package includes the
+[Standard.Licensing.12noon NuGet package](https://nuget.org/packages/Standard.Licensing.12noon)
+which has fixes to the `Expiration` property.
+When those fixes are incorporated into the original **Standard.Licensing** project, the
+**Standard.Licensing.12noon** package will be deprecated.
+
 
 ![License Manager](https://raw.githubusercontent.com/skst/LicenseManager/master/LicenseManager_12noon.png)
 

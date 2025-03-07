@@ -34,6 +34,7 @@ env:
   # Path to the project files relative to the root of the project.
   PROJECT_CLIENT_FILE_PATH:  LicenseManager_12noon.Client/LicenseManager_12noon.Client.csproj
   PROJECT_APP_FILE_PATH:     LicenseManager_12noon/LicenseManager_12noon.csproj
+  PROJECT_EXAMPLE:           LicenseManager_ClientExample
   PROJECT_EXAMPLE_FILE_PATH: LicenseManager_ClientExample/LicenseManager_ClientExample.csproj
   PROJECT_TESTS_FILE_PATH:   LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
 
@@ -96,7 +97,9 @@ jobs:
           dotnet publish ${{env.PROJECT_EXAMPLE_FILE_PATH}} --property:PublishProfile=FolderProfile --output ./release/
 
       - name: Copy extra files to publish
-        run: Copy-Item -Path LICENSE -Destination ./release/
+        run: |
+          Copy-Item -Path LICENSE -Destination ./release/
+          Copy-Item -Path ${{env.PROJECT_EXAMPLE}}/${{env.PROJECT_EXAMPLE}}.lic -Destination ./release/
 
       # Upload release artifact to share with next job
       # https://docs.github.com/en/actions/guides/storing-workflow-data-as-artifacts#about-workflow-artifacts
