@@ -46,21 +46,21 @@ public partial class LicenseFile
 	/*
 	 * These properties are set when a license has been validated.
 	 */
-	public LicenseType StandardOrTrial = LicenseType.Standard;
-	public DateTime ExpirationDateUTC = DateTime.MaxValue.Date;
-	public int ExpirationDays;
-	public int Quantity = 1;
+	public LicenseType StandardOrTrial { get; private set; } = LicenseType.Standard;
+	public DateTime ExpirationDateUTC { get; private set; } = DateTime.MaxValue.Date;
+	public int ExpirationDays { get; private set; }
+	public int Quantity { get; private set; } = 1;
 
-	public string Product = string.Empty;
-	public string Version = string.Empty;
-	public DateOnly? PublishDate;
+	public string Product { get; private set; } = string.Empty;
+	public string Version { get; private set; } = string.Empty;
+	public DateOnly? PublishDate { get; private set; }
 
-	public string Name = string.Empty;
-	public string Email = string.Empty;
-	public string Company = string.Empty;
+	public string Name { get; private set; } = string.Empty;
+	public string Email { get; private set; } = string.Empty;
+	public string Company { get; private set; } = string.Empty;
 
-	public bool IsLockedToAssembly = false;
-	public string ProductId = string.Empty;
+	public bool IsLockedToAssembly { get; private set; } = false;
+	public string ProductId { get; private set; } = string.Empty;
 	public static string CreateProductIdentity(string productId, string keyPublic) => productId + " " + keyPublic;
 
 
