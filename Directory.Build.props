@@ -3,8 +3,8 @@
 		<Company>12noon LLC</Company>
 		<Copyright>(c) 2024-2025 12noon LLC</Copyright>
 		<Product>12noon License Manager</Product>
-		<VersionPrefix>2.1.0</VersionPrefix>
-		<FileVersion>2.1.0.0</FileVersion>
-		<AssemblyVersion>2.1.0</AssemblyVersion>
+		<VersionPrefix>2.1.1</VersionPrefix>
+		<FileVersion>2.1.1.0</FileVersion>
+		<AssemblyVersion>2.1.1</AssemblyVersion>
 	</PropertyGroup>
 </Project>
