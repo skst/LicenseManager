@@ -276,7 +276,6 @@
 			<Button Style="{StaticResource StyleButton}" Content="Save License..." Click="SaveLicenseButton_Click">
 				<Button.IsEnabled>
 					<MultiBinding Converter="{StaticResource MultiValueToBooleanConverter}">
-						<Binding Path="IsLicenseDirty" />
 						<Binding Path="Passphrase" />
 						<Binding Path="KeyPublic" />
 						<Binding Path="Id" />
