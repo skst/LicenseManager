@@ -230,7 +230,7 @@ public partial class LicenseManager : ObservableObject
 		StandardOrTrial = Enum.Parse<LicenseType>(license.Element(ELEMENT_NAME_STANDARD_OR_TRIAL)!.Value);
 
 		XElement? eltExpirationDate = license.Element(ELEMENT_NAME_EXPIRATION_DATE);
-		ExpirationDateUTC = (eltExpirationDate is null)
+		ExpirationDateUTC = string.IsNullOrEmpty(eltExpirationDate?.Value)
 			? DateTime.MaxValue.Date
 			: DateTime.Parse(eltExpirationDate.Value, CultureInfo.InvariantCulture,
 									DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
@@ -344,7 +344,7 @@ public partial class LicenseManager : ObservableObject
 				)
 				, new XElement(ELEMENT_NAME_LICENSE
 					, new XElement(ELEMENT_NAME_STANDARD_OR_TRIAL, StandardOrTrial)
-					, new XElement(ELEMENT_NAME_EXPIRATION_DATE, ExpirationDateUTC.ToString(CultureInfo.InvariantCulture))
+					, new XElement(ELEMENT_NAME_EXPIRATION_DATE, (ExpirationDays == 0) ? null : ExpirationDateUTC.ToString(CultureInfo.InvariantCulture))
 					, new XElement(ELEMENT_NAME_EXPIRATION_DAYS, ExpirationDays)
 					, new XElement(ELEMENT_NAME_QUANTITY, Quantity)
 				)
