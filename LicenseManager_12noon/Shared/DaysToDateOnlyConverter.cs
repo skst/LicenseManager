@@ -12,7 +12,9 @@ namespace Shared;
 ///	xmlns:sys="clr-namespace:System;assembly=mscorlib"
 ///
 /// <TextBox	Text="{Binding ExpirationDays, UpdateSourceTrigger=PropertyChanged}" />
-/// <TextBlock Text="{Binding ExpirationDays, Converter={StaticResource DaysToDateOnlyConverter}, FallbackValue=(expiration date)}" />
+/// <TextBlock Text="{Binding ExpirationDays, Converter={StaticResource DaysToDateOnlyConverter}}" />
+/// <TextBlock Text="{Binding ExpirationDays, Converter={StaticResource DaysToDateOnlyConverter}, ConverterParameter=Never}" />
+/// <TextBlock Text="{Binding ExpirationDays, Converter={StaticResource DaysToDateOnlyConverter}, ConverterParameter=''}" />
 ///
 /// public DateOnly? PublishDate { get; set; }
 ///
@@ -24,11 +26,13 @@ public sealed class DaysToDateOnlyConverter : IValueConverter
 	/// </summary>
 	/// <param name="value">Number of days offset from today</param>
 	/// <param name="targetType">int</param>
-	/// <param name="parameter"></param>
+	/// <param name="parameter">Optional text to use when value is zero</param>
 	/// <param name="culture"></param>
 	/// <returns>DateOnly</returns>
 	public object? Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
 	{
+		string? textForZero = parameter as string;
+
 		if (value is null)
 		{
 			return null;
@@ -40,9 +44,9 @@ public sealed class DaysToDateOnlyConverter : IValueConverter
 		}
 
 		int days = (int)value;
-		if (days == 0)
+		if ((days == 0) && (textForZero is not null))
 		{
-			return Binding.DoNothing;
+			return textForZero;
 		}
 
 		return DateOnly.FromDateTime(MyNow.Now().AddDays(days));

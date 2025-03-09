@@ -228,7 +228,7 @@
 					Padding="2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" VerticalAlignment="Center"
 				/>
 				<TextBlock	Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left"
-					Text="{Binding ExpirationDays, Converter={StaticResource DaysToDateOnlyConverter}, StringFormat={}{0:d MMM yyyy}, FallbackValue=(expiration date)}"
+					Text="{Binding ExpirationDays, Converter={StaticResource DaysToDateOnlyConverter}, ConverterParameter='', StringFormat={}{0:d MMM yyyy}}"
 				/>
 				<Label		Grid.Row="2" Grid.Column="0" Content="Quantity:" />
 				<shared:NumberUpDown Grid.Row="2" Grid.Column="1" Value="{Binding Quantity}" AllowNull="False"
