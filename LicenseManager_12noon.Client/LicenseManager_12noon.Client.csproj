@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RootNamespace>LicenseManager_12noon</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Title>12noon License Manager Client</Title>
     <Description>The 12noon License Manager Client NuGet package provides an application with a simplified API for validating a license. It is a companion to the 12noon License Manager application.
 
@@ -23,6 +24,10 @@ License Manager is a graphical front-end application designed to create and mana
 
   <ItemGroup>
     <None Include="..\LicenseManager_12noon\lock.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

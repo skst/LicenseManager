@@ -34,9 +34,9 @@ env:
   # Path to the project files relative to the root of the project.
   PROJECT_CLIENT_FILE_PATH:  LicenseManager_12noon.Client/LicenseManager_12noon.Client.csproj
   PROJECT_APP_FILE_PATH:     LicenseManager_12noon/LicenseManager_12noon.csproj
+  PROJECT_TESTS_FILE_PATH:   LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
   PROJECT_EXAMPLE:           LicenseManager_ClientExample
   PROJECT_EXAMPLE_FILE_PATH: LicenseManager_ClientExample/LicenseManager_ClientExample.csproj
-  PROJECT_TESTS_FILE_PATH:   LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
@@ -65,7 +65,9 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          # The NuGet package supports both .NET 9 and 8.
+          # setup-dotnet will handle installing both SDKs.
+          dotnet-version: '9.0.x'
           dotnet-quality: ga
 
       # Work around https://github.com/actions/setup-dotnet/issues/155
@@ -78,25 +80,28 @@ jobs:
       - name: Build
         run: |
           # => .\artifacts\package\release\LicenseManager_12noon.Client.1.3.1.nupkg
-          dotnet build ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+          dotnet build ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --framework net8.0
+          dotnet build ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --framework net9.0
           dotnet build ${{env.PROJECT_APP_FILE_PATH}}     --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
-          dotnet build ${{env.PROJECT_EXAMPLE_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
 
       # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
       # verbosity detailed
       - name: Test
         run: dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo --verbosity normal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
 
-      # Publish to sibling `release` folder for github-tag-action step.
-      - name: Publish targets in `release` folder
+      - name: Pack NuGet package to `release` folder
         run: |
           # pack => LicenseManager_12noon.Client.1.2.3.nupkg
-          dotnet pack    ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --no-restore --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --output ./release/
+          dotnet pack ${{env.PROJECT_CLIENT_FILE_PATH}} --nologo --no-restore --no-build --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --output ./release/
+
+      # Publish to sibling `release` folder for github-tag-action step.
+      - name: Publish apps to `release` folder
+        run: |
           # Build single-file deployment
           dotnet publish ${{env.PROJECT_APP_FILE_PATH}}     --property:PublishProfile=FolderProfile --output ./release/
           dotnet publish ${{env.PROJECT_EXAMPLE_FILE_PATH}} --property:PublishProfile=FolderProfile --output ./release/
 
-      - name: Copy extra files to publish
+      - name: Copy extra files to `release` folder
         run: |
           Copy-Item -Path LICENSE -Destination ./release/
           Copy-Item -Path ${{env.PROJECT_EXAMPLE}}/${{env.PROJECT_EXAMPLE}}.lic -Destination ./release/

@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LicenseManager_12noon.Client" Version="2.0.2" />
+    <PackageReference Include="LicenseManager_12noon.Client" Version="2.1.1" />
   </ItemGroup>
+
 </Project>
