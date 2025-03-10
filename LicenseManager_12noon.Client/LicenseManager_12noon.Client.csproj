@@ -20,6 +20,8 @@ License Manager is a graphical front-end application designed to create and mana
     <PackageId>LicenseManager_12noon.Client</PackageId>
     <Authors>$(Company)</Authors>
     <Platforms>x64</Platforms>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
