@@ -32,6 +32,7 @@ on:
 
 env:
   # Path to the project files relative to the root of the project.
+  NUGET_PACKAGE_NAME:        LicenseManager_12noon.Client
   PROJECT_CLIENT_FILE_PATH:  LicenseManager_12noon.Client/LicenseManager_12noon.Client.csproj
   PROJECT_APP_FILE_PATH:     LicenseManager_12noon/LicenseManager_12noon.csproj
   PROJECT_TESTS_FILE_PATH:   LicenseManager_12noon.UnitTests/LicenseManager_12noon.UnitTests.csproj
@@ -53,10 +54,66 @@ concurrency:
 # Jobs are run in parallel unless `needs` is specified.
 # https://docs.github.com/en/actions/learn-github-actions/managing-complex-workflows#creating-dependent-jobs
 jobs:
-  build:
-    if: (github.event_name == 'workflow_dispatch') || (!contains(toJson(github.event.commits.*.message), '***NO_CI***') && !contains(toJson(github.event.commits.*.message), '[ci skip]') && !contains(toJson(github.event.commits.*.message), '[skip ci]'))
+  # This job determines the new version WITHOUT tagging the branch.
+  version:
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (
+        !contains(toJson(github.event.commits.*.message), '***NO_CI***') &&
+        !contains(toJson(github.event.commits.*.message), '[ci skip]') &&
+        !contains(toJson(github.event.commits.*.message), '[skip ci]')
+      )
 
+    runs-on: ubuntu-latest
+
+    # Map a step output to a job output
+    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+    outputs:
+      # Example: "1.23.456"
+      TagNoV: ${{ steps.StepTrimVersion.outputs.TagNoV }}
+      # Example: major | minor | patch | none
+      TagPart: ${{ steps.StepTagNoV.outputs.part }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      # https://github.com/marketplace/actions/github-tag-bump
+      # We want to use the tag without the 'v' prefix for the release name.
+      # The action does not output that, so we perform a dry run to get the tag without 'v'.
+      - name: Get new tag without 'v' prefix
+        id: StepTagNoV
+        uses: anothrNick/github-tag-action@1.71.0
+        env:
+          DRY_RUN: true
+          DEFAULT_BUMP: none
+          WITH_V: false
+
+      # Work around bug in github-tag-action ("None" adds 'v' even when WITH_V=false)
+      - name: Remove 'v' from tag if present
+        id: StepTrimVersion
+        run: |
+          ver="${{ steps.StepTagNoV.outputs.new_tag }}"
+          noV="${ver#v}"
+          echo "Input: $ver -> Output: $noV"
+          echo "TagNoV=$noV" >> $GITHUB_OUTPUT
+
+      - name: Emit tag outputs
+        run: |
+          echo Bump part=${{ steps.StepTagNoV.outputs.part }}
+          echo Old tag=${{ steps.StepTagNoV.outputs.old_tag }}
+          echo New tag=${{ steps.StepTagNoV.outputs.new_tag }}
+          echo Tag=${{ steps.StepTagNoV.outputs.tag }}
+          echo TagNoV=${{ steps.StepTrimVersion.outputs.TagNoV }}
+
+  build:
+    needs: [version]
     runs-on: windows-latest
+
+    permissions:
+      contents: write
 
     steps:
       - name: Check out repository
@@ -71,13 +128,13 @@ jobs:
           dotnet-quality: ga
 
       # Work around https://github.com/actions/setup-dotnet/issues/155
-      - name: Clean solution
-        run: dotnet clean --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
-      - name: Clean NuGet
-        run: dotnet nuget locals all --clear
+      - name: Clean solution and NuGet
+        run: |
+          dotnet clean --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+          dotnet nuget locals all --clear
 
       # https://docs.microsoft.com/en-us/dotnet/core/tools/
-      - name: Build
+      - name: Build NuGet package and main application
         run: |
           dotnet build ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --framework net8.0
           dotnet build ${{env.PROJECT_CLIENT_FILE_PATH}}  --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --framework net9.0
@@ -85,13 +142,78 @@ jobs:
 
       # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
       # verbosity detailed
-      - name: Test
+      - name: Run unit tests
         run: dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo --verbosity normal --logger:"console;verbosity=normal" --configuration Debug --runtime win-x64
 
+      #
+      # NUGET PACKAGE
+      #
       - name: Pack NuGet package to `release` folder
         run: |
           # pack => .\artifacts\package\release\LicenseManager_12noon.Client.1.2.3.4.nupkg
           dotnet pack ${{env.PROJECT_CLIENT_FILE_PATH}} --nologo --no-restore --no-build --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64 --output ./release/
+
+      - name: Extract and inspect NuGet package
+        env:
+          NUGET_PACKAGE_NAME: ${{ env.NUGET_PACKAGE_NAME }}
+          VERSION: ${{ needs.version.outputs.TagNoV }}
+        run: |
+          # Use PowerShell syntax for variable handling
+          $packageName = "$env:NUGET_PACKAGE_NAME.$env:VERSION.nupkg"
+          Write-Host "Package name: $packageName"
+          mkdir temp
+          dir ./release/
+          copy ./release/$packageName ./temp/
+          dir ./temp/
+          cd temp
+          Rename-Item -Path "$packageName" -NewName "$packageName.zip"
+          dir
+          Write-Host "unzip $packageName.zip"
+          Expand-Archive -Path "./$packageName.zip" -DestinationPath ./
+          dir
+          Get-Content *.nuspec
+          cd ..
+
+      # Use NuGet package locally (not in the NuGet Gallery)
+      # dotnet restore --verbosity detailed
+      - name: Install local NuGet package and update Example application
+        env:
+          VERSION: ${{ needs.version.outputs.TagNoV }}
+        run: |
+          # Create local NuGet source
+          dotnet new nugetconfig --force
+          dotnet nuget add source "${{github.workspace}}\release" `
+            --name LocalPackages `
+            --configfile nuget.config
+          dotnet nuget list source
+          # Update the version in the project file
+          dotnet add "${{env.PROJECT_EXAMPLE_FILE_PATH}}" `
+            package ${{env.NUGET_PACKAGE_NAME}} `
+            --version $env:VERSION `
+            --source LocalPackages `
+            --no-restore `
+            || exit 1
+          dotnet restore "${{env.PROJECT_EXAMPLE_FILE_PATH}}"
+          dotnet list "${{env.PROJECT_EXAMPLE_FILE_PATH}}" package
+          Get-Content ${{env.PROJECT_EXAMPLE_FILE_PATH}}
+
+      - name: Build Example Client application
+        run: |
+          dotnet build ${{env.PROJECT_EXAMPLE_FILE_PATH}} --nologo --self-contained --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+          Get-Content ${{env.PROJECT_EXAMPLE_FILE_PATH}}
+
+      - name: Commit changes to Example Client
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "${{env.PROJECT_EXAMPLE_FILE_PATH}}"
+          git status
+          git commit -m "Publish ${{needs.version.outputs.TagNoV}}. Update Example Client to use latest NuGet package."
+          git push origin $GITHUB_REF_NAME
+          git log --reverse --oneline -5
+      #
+      # NUGET PACKAGE END
+      #
 
       # Publish to sibling `release` folder for github-tag-action step.
       - name: Publish apps to `release` folder
@@ -117,57 +239,8 @@ jobs:
         # Use always() to always run this step even when there are failures
         #if: ${{ always() }}
 
-
-  version:
-    needs: build
-    runs-on: ubuntu-latest
-    # Map a step output to a job output
-    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-    outputs:
-#      TagNoV: ${{ steps.StepTagNoV.outputs.new_tag }}
-      TagNoV: ${{ steps.TrimV.outputs.result }}
-      TagPart: ${{ steps.StepTagNoV.outputs.part }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: '0'
-
-      # https://github.com/marketplace/actions/github-tag-bump
-      # We want to use the tag without the 'v' prefix for the release name.
-      # The action does not output that, so we perform a dry run to get the tag without 'v'.
-      - name: Get tag without 'v' prefix
-        id: StepTagNoV
-        uses: anothrNick/github-tag-action@1.71.0
-        env:
-          DRY_RUN: true
-          DEFAULT_BUMP: none
-          WITH_V: false
-
-      - name: Output bump part
-        run: echo Bump part=${{ steps.StepTagNoV.outputs.part }}
-
-      # BUG: `new_tag` has the 'v' even when WITH_V is false.
-      # So, we remove it.
-      - name: Substitute string
-        uses: bluwy/substitute-string-action@v3.0.0
-        id: TrimV
-        with:
-          _input-text: ${{ steps.StepTagNoV.outputs.new_tag }}
-          # This emits a warning which can be ignored.
-          # v: ''
-        # https://github.com/orgs/community/discussions/25387
-        # Can work around warning by using this environment variables:
-        env:
-          INPUT_v: ''
-
-      - name: Output trimmed version
-        run: echo Version=${{ steps.TrimV.outputs.result }}
-        # steps.TrimV.outputs.result replaces steps.StepTagNoV.outputs.new_tag
-
-
   publish:
-    needs: version
+    needs: [version, build]
     if: needs.version.outputs.TagPart != 'none'
     runs-on: ubuntu-latest
 
@@ -197,23 +270,10 @@ jobs:
           failOnError: false
 
       - name: List folder
-        run: |
-          ls -la
-          ls -la ./release/
-
-      # https://learn.microsoft.com/en-us/nuget/nuget-org/publish-a-package
-      - name: Publish NuGet package to NuGet.org and GitHub Packages
-        env:
-          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        run: |
-          dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
-          dotnet nuget push ./release/*.snupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
-          # Push to GitHub Packages -- Why?
-          #dotnet nuget push ./release/*.nupkg --api-key ${{secrets.TOKEN_PACKAGES}} --source https://nuget.pkg.github.com/${{github.repository_owner}}/index.json --skip-duplicate
-          #dotnet nuget push ./release/*.snupkg --api-key ${{secrets.TOKEN_PACKAGES}} --source https://nuget.pkg.github.com/${{github.repository_owner}}/index.json --skip-duplicate
+        run: ls -la ./release/
 
       # https://github.com/marketplace/actions/github-tag-bump
-      - name: Bump version and push tag
+      - name: Bump version and push tag with 'v' prefix
         id: StepBump
         uses: anothrNick/github-tag-action@1.71.0
         env:
@@ -221,14 +281,25 @@ jobs:
           DEFAULT_BUMP: none
           WITH_V: true
 
+      # https://learn.microsoft.com/en-us/nuget/nuget-org/publish-a-package
+      - name: Publish NuGet package
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: |
+          # NuGet.org
+          # --skip-duplicate prevents an error if this package version already exists.
+          # It cannot overwrite an existing package with the same version.
+          dotnet nuget push ./release/*.nupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push ./release/*.snupkg --api-key ${{secrets.API_KEY_NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          #WHY? GitHub Packages
+          #dotnet nuget push ./release/*.nupkg --api-key ${{secrets.TOKEN_PACKAGES}} --source https://nuget.pkg.github.com/${{github.repository_owner}}/index.json --skip-duplicate
+          #dotnet nuget push ./release/*.snupkg --api-key ${{secrets.TOKEN_PACKAGES}} --source https://nuget.pkg.github.com/${{github.repository_owner}}/index.json --skip-duplicate
+
       - name: Zip Release folder
-        if: success()
         working-directory: ./release
         run: |
           zip ../${{env.ARTIFACT_NAME}}.zip *
-          cd ..
-          ls -la
-          zipinfo ${{env.ARTIFACT_NAME}}.zip
+          zipinfo ../${{env.ARTIFACT_NAME}}.zip
 
       # (This could be a separate action triggered by pushing a tag.)
       # https://github.com/marketplace/actions/create-release
@@ -238,7 +309,9 @@ jobs:
         with:
           allowUpdates: false
           generateReleaseNotes: true
+          # 1.23.456
           name: ${{ needs.version.outputs.TagNoV }}
+          # v1.23.456
           tag: ${{ steps.StepBump.outputs.new_tag }}
           #body: ???
           # Note: Using "./release/*" uploads the individual files.
